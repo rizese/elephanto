@@ -1,4 +1,3 @@
-import Versions from './components/Versions'
 import electronLogo from './assets/electron.svg'
 
 function App(): JSX.Element {
@@ -16,8 +15,8 @@ function App(): JSX.Element {
         console.log('Connection successful:', result.version)
 
         // Test query
-        const queryResult = await window.electronAPI.database.testQuery()
-        console.log('Query result:', queryResult)
+        // const queryResult = await window.electronAPI.database.testQuery()
+        // console.log('Query result:', queryResult)
       } else {
         console.error('Connection failed:', result.error)
       }
@@ -56,7 +55,6 @@ function App(): JSX.Element {
           </a>
         </div>
       </div>
-      <Versions></Versions>
     </>
   )
 }

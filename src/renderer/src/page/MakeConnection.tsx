@@ -13,7 +13,9 @@ type ConnectionResult = {
   serverVersion?: string
 }
 
-export const ConnectionForm = ({ onSuccessfulConnection }: ConnectionFormProps): JSX.Element => {
+export const MakeConnectionPage = ({
+  onSuccessfulConnection
+}: ConnectionFormProps): JSX.Element => {
   const [formData, setFormData] = useState({
     host: 'localhost',
     port: '5432',
@@ -29,7 +31,7 @@ export const ConnectionForm = ({ onSuccessfulConnection }: ConnectionFormProps):
 
   const getConnectionStringForDisplay = (): string => {
     const password = showPassword ? formData.password : '*'.repeat(formData.password.length)
-    return `postgresql://${formData.user}${(formData.user || formData.password) && ':'}${password}${(formData.user || formData.password) && '@'}${formData.host}:${formData.port}${formData.database && '/'}${formData.database}`
+    return `postgresql://${formData.user}${formData.password && ':' + password}${(formData.user || formData.password) && '@'}${formData.host}${formData.port && ':' + formData.port}${formData.database && '/'}${formData.database}`
   }
 
   const getConnectionString = (): string => {

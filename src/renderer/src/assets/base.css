@@ -1,3 +1,20 @@
+/* src/renderer/src/assets/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light dark;
+}
+
+
+
+html, body {
+  @apply antialiased bg-white dark:bg-gray-900;
+  font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-size: 12px;
+}
+
 :root {
   --ev-c-white: #ffffff;
   --ev-c-white-soft: #f8f8f8;
@@ -45,6 +62,7 @@ ul {
 
 body {
   min-height: 100vh;
+  max-width: 100vw;
   color: var(--color-text);
   background: var(--color-background);
   line-height: 1.6;

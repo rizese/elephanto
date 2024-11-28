@@ -1,48 +1,33 @@
-import { contextBridge, ipcRenderer } from 'electron'
+// src/preload/index.ts
 import { electronAPI } from '@electron-toolkit/preload'
+import { contextBridge, ipcRenderer } from 'electron'
+import { DatabaseAPI } from '../types/database'
 
-// Expose protected methods that allow the renderer process to use
-// the ipcRenderer without exposing the entire object
+// Database API
+const dbAPI: DatabaseAPI = {
+  connect: (connectionString: string) => ipcRenderer.invoke('db:connect', connectionString),
+
+  getSchemas: () => ipcRenderer.invoke('db:get-schemas'),
+
+  getTables: (schema: string) => ipcRenderer.invoke('db:get-tables', schema),
+
+  getTableStructure: (schema: string, table: string) =>
+    ipcRenderer.invoke('db:get-table-structure', schema, table),
+
+  getRelations: (schema: string, table: string) =>
+    ipcRenderer.invoke('db:get-relations', schema, table),
+
+  executeQuery: (query: string) => ipcRenderer.invoke('db:execute-query', query)
+}
+
+// Use contextBridge to expose our API to the renderer process
 contextBridge.exposeInMainWorld('electronAPI', {
   ...electronAPI,
-  database: {
-    connect: (connectionString: string) => ipcRenderer.invoke('db:connect', connectionString),
-    testQuery: () => ipcRenderer.invoke('db:test-query')
-  }
+  database: dbAPI,
+  // Preserve any existing template APIs you want to keep
+  ipcRenderer: { ...ipcRenderer }
 })
 
-// Update the type definitions
-export type ElectronAPI = {
-  database: {
-    connect: (connectionString: string) => Promise<{
-      success: boolean
-      version?: string
-      error?: string
-    }>
-    testQuery: () => Promise<{
-      success: boolean
-      data?: Array<{ table_schema: string; table_name: string }>
-      error?: string
-    }>
-  }
-}
-
-// Custom APIs for renderer
-const api = {}
-
-// Use `contextBridge` APIs to expose Electron APIs to
-// renderer only if context isolation is enabled, otherwise
-// just add to the DOM global.
-if (process.contextIsolated) {
-  try {
-    contextBridge.exposeInMainWorld('electron', electronAPI)
-    contextBridge.exposeInMainWorld('api', api)
-  } catch (error) {
-    console.error(error)
-  }
-} else {
-  // @ts-ignore (define in dts)
-  window.electron = electronAPI
-  // @ts-ignore (define in dts)
-  window.api = api
-}
+// `exposeInMainWorld` can't detect attributes and methods of `exports` in runtime.
+// Use the explicit export to make attributes and methods available in the preload process.
+export type { DatabaseAPI } from '../types/database'

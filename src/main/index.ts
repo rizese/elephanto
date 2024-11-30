@@ -150,12 +150,12 @@ ipcMain.handle('db:get-schemas', async () => {
   try {
     const query = `
       SELECT
-        schema_name,
+        table_schema as schema_name,
         COUNT(table_name) as table_count
       FROM information_schema.tables
-      WHERE schema_name NOT IN ('pg_catalog', 'information_schema')
-      GROUP BY schema_name
-      ORDER BY schema_name;
+      WHERE table_schema NOT IN ('pg_catalog', 'information_schema')
+      GROUP BY table_schema
+      ORDER BY table_schema;
     `
     const result = await executeQueryWithTimeout(query)
     return { success: true, schemas: result.rows }
@@ -187,7 +187,6 @@ ipcMain.handle('db:get-tables', async (_event, schema: string) => {
     }
   }
 })
-
 ipcMain.handle('db:get-table-structure', async (_event, schema: string, table: string) => {
   try {
     const query = `
@@ -199,11 +198,11 @@ ipcMain.handle('db:get-table-structure', async (_event, schema: string, table: s
         c.character_maximum_length,
         pg_catalog.col_description(format('%I.%I', c.table_schema, c.table_name)::regclass::oid, c.ordinal_position) as column_description,
         CASE
-          WHEN pk.constraint_type = 'PRIMARY KEY' THEN true
+          WHEN pk.column_name IS NOT NULL THEN true
           ELSE false
         END as is_primary_key,
         CASE
-          WHEN fk.constraint_name IS NOT NULL THEN true
+          WHEN fk.column_name IS NOT NULL THEN true
           ELSE false
         END as is_foreign_key
       FROM information_schema.columns c
@@ -229,7 +228,7 @@ ipcMain.handle('db:get-table-structure', async (_event, schema: string, table: s
         AND c.table_name = $2
       ORDER BY c.ordinal_position;
     `
-    const result = await executeQueryWithTimeout<TableStructure>(query, [schema, table])
+    const result = await executeQueryWithTimeout(query, [schema, table])
     return { success: true, structure: result.rows }
   } catch (error) {
     return {

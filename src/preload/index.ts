@@ -1,7 +1,7 @@
 // src/preload/index.ts
 import { electronAPI } from '@electron-toolkit/preload'
 import { contextBridge, ipcRenderer } from 'electron'
-import { DatabaseAPI } from '../types/database'
+import { DatabaseAPI } from '../renderer/src/types/database'
 
 // Database API
 const dbAPI: DatabaseAPI = {
@@ -30,4 +30,4 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
 // `exposeInMainWorld` can't detect attributes and methods of `exports` in runtime.
 // Use the explicit export to make attributes and methods available in the preload process.
-export type { DatabaseAPI } from '../types/database'
+export type { DatabaseAPI } from '../renderer/src/types/database'

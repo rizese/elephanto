@@ -25,6 +25,7 @@
     "@electron-toolkit/utils": "^3.0.0",
     "@fontsource/questrial": "^5.1.0",
     "@tailwindcss/forms": "^0.5.9",
+    "@xyflow/react": "^12.3.5",
     "electron-updater": "^6.1.7",
     "lucide-react": "^0.461.0",
     "pg": "^8.13.1"

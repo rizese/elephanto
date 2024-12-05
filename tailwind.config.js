@@ -9,7 +9,7 @@ export default {
         questrial: ['Questrial', 'sans-serif']
       },
       dropShadow: {
-        logo: '-1px 3px 4px rgba(0, 0, 0, 0.8)'
+        logo: '-1px 3px 4px rgba(255, 255, 255, 0.8)'
       }
     }
   },

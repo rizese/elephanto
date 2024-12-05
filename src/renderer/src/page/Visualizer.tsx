@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import { useCallback, useLayoutEffect } from 'react'
 import {
   ReactFlow,
   Node,
@@ -13,7 +13,10 @@ import {
   Handle,
   MiniMap
 } from '@xyflow/react'
+import dagre from 'dagre'
 import '@xyflow/react/dist/style.css'
+import { KeyRound, Link } from 'lucide-react'
+import TableSelectZoom from '@renderer/components/TableSelectZoom'
 
 interface Column {
   name: string
@@ -37,43 +40,63 @@ interface SchemaVisualizerProps {
   tables: Table[]
 }
 
+const mapDataType = (dataType: string) => {
+  const map = {
+    'character varying': 'varchar',
+    character: 'char',
+    'timestamp without time zone': 'datetime'
+  }
+  return map[dataType] || dataType
+}
+
 const TableNode = ({ data }) => {
   return (
     <div className="bg-white dark:bg-zinc-700 border-1 border-zinc-300 rounded-lg shadow-lg p-4 min-w-[250px]">
-      {/* Source handle at top */}
+      {/* Multiple handles on all sides */}
       <Handle
         type="source"
         position={Position.Top}
-        id={`${data.label}-source`}
+        id={`${data.label}-top`}
+        style={{ opacity: 0 }}
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        id={`${data.label}-right`}
+        style={{ opacity: 0 }}
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        id={`${data.label}-bottom`}
+        style={{ opacity: 0 }}
+      />
+      <Handle
+        type="source"
+        position={Position.Left}
+        id={`${data.label}-left`}
         style={{ opacity: 0 }}
       />
 
       <div className="border-1 dark:border-zinc-200 pb-2 mb-2">
-        <h3 className="font-bold text-lg">{data.label}</h3>
-        <p className="text-sm text-gray-600">{data.schema}</p>
+        <h2 className="font-bold text-lg">{data.label}</h2>
+        <p className="text-sm text-gray-400">{data.schema}</p>
       </div>
       <div className="space-y-1">
         {data.columns.map((column: Column, index: number) => (
-          <div key={index} className="flex  font-mono space-between text-sm">
-            <span className={` flex-1 ${column.isPrimaryKey ? 'font-bold' : ''}`}>
+          <div key={index} className="flex font-mono space-between text-sm leading-4">
+            <span className={`flex-1 ${column.isPrimaryKey ? 'font-bold' : ''}`}>
               {column.name}
+              {column.isNullable && <span className="font-light text-gray-400">?</span>}
             </span>
-            <span className={`text-gray-400 text-xs ${column.isNullable && 'italic'}`}>
-              {column.isPrimaryKey && '🔑 '}
-              {column.isForeignKey && '🔗 '}
-              {column.dataType}
+            <span className={`text-gray-400 text-xs`}>
+              {column.isPrimaryKey && <KeyRound className="inline pr-1 h-4 w-4" />}
+              {column.isForeignKey && <Link className="inline pr-1 h-4 w-4" />}
+              {mapDataType(column.dataType).toUpperCase()}
             </span>
           </div>
         ))}
       </div>
-
-      {/* Target handle at bottom */}
-      <Handle
-        type="target"
-        position={Position.Bottom}
-        id={`${data.label}-target`}
-        style={{ opacity: 0 }}
-      />
     </div>
   )
 }
@@ -82,17 +105,85 @@ const nodeTypes = {
   tableNode: TableNode
 }
 
+const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'TB') => {
+  const dagreGraph = new dagre.graphlib.Graph()
+  dagreGraph.setDefaultEdgeLabel(() => ({}))
+
+  const nodeWidth = 250
+  const nodeHeight = 300
+  dagreGraph.setGraph({
+    rankdir: direction,
+    nodesep: 100,
+    ranksep: 200,
+    marginx: 50,
+    marginy: 50
+  })
+
+  nodes.forEach((node) => {
+    dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight })
+  })
+
+  edges.forEach((edge) => {
+    dagreGraph.setEdge(edge.source, edge.target)
+  })
+
+  dagre.layout(dagreGraph)
+
+  const layoutedNodes = nodes.map((node) => {
+    const nodeWithPosition = dagreGraph.node(node.id)
+    return {
+      ...node,
+      position: {
+        x: nodeWithPosition.x - nodeWidth / 2,
+        y: nodeWithPosition.y - nodeHeight / 2
+      }
+    }
+  })
+
+  // Calculate smart handle positions for edges
+  const layoutedEdges = edges.map((edge) => {
+    const sourceNode = dagreGraph.node(edge.source)
+    const targetNode = dagreGraph.node(edge.target)
+
+    // Calculate the direction between nodes
+    const deltaX = targetNode.x - sourceNode.x
+    const deltaY = targetNode.y - sourceNode.y
+
+    // Determine best handle positions based on relative positions
+    let sourcePos: Position
+    let targetPos: Position
+
+    if (Math.abs(deltaY) > Math.abs(deltaX)) {
+      // Vertical alignment is stronger
+      sourcePos = deltaY > 0 ? Position.Bottom : Position.Top
+      targetPos = deltaY > 0 ? Position.Top : Position.Bottom
+    } else {
+      // Horizontal alignment is stronger
+      sourcePos = deltaX > 0 ? Position.Right : Position.Left
+      targetPos = deltaX > 0 ? Position.Left : Position.Right
+    }
+
+    return {
+      ...edge,
+      sourceHandle: `${edge.source.split('.')[1]}-${sourcePos.toLowerCase()}`,
+      targetHandle: `${edge.target.split('.')[1]}-${targetPos.toLowerCase()}`
+    }
+  })
+
+  return { nodes: layoutedNodes, edges: layoutedEdges }
+}
+
 export const SchemaVisualizer = ({ tables }: SchemaVisualizerProps): JSX.Element => {
-  const { initialNodes, initialEdges } = useMemo(() => {
+  const getNodesAndEdges = useCallback(() => {
     const nodes: Node[] = []
     const edges: Edge[] = []
 
-    tables.forEach((table, index) => {
+    tables.forEach((table) => {
       const nodeId = `${table.schema}.${table.name}`
       nodes.push({
         id: nodeId,
         type: 'tableNode',
-        position: { x: (index % 3) * 350, y: Math.floor(index / 3) * 400 },
+        position: { x: 0, y: 0 },
         data: {
           label: table.name,
           schema: table.schema,
@@ -100,7 +191,6 @@ export const SchemaVisualizer = ({ tables }: SchemaVisualizerProps): JSX.Element
         }
       })
 
-      // Create edges for foreign key relationships
       table.columns.forEach((column) => {
         if (column.isForeignKey && column.references) {
           const sourceId = nodeId
@@ -111,10 +201,8 @@ export const SchemaVisualizer = ({ tables }: SchemaVisualizerProps): JSX.Element
             id: edgeId,
             source: sourceId,
             target: targetId,
-            sourceHandle: `${table.name}-source`,
-            targetHandle: `${column.references.table}-target`,
             label: `${column.name} → ${column.references.column}`,
-            type: 'smoothstep',
+            type: 'bezier',
             animated: true,
             markerEnd: MarkerType.ArrowClosed,
             style: {
@@ -136,14 +224,21 @@ export const SchemaVisualizer = ({ tables }: SchemaVisualizerProps): JSX.Element
       })
     })
 
-    return { initialNodes: nodes, initialEdges: edges }
+    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(nodes, edges)
+    return { nodes: layoutedNodes, edges: layoutedEdges }
   }, [tables])
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
+  const [nodes, setNodes, onNodesChange] = useNodesState([])
+  const [edges, setEdges, onEdgesChange] = useEdgesState([])
+
+  useLayoutEffect(() => {
+    const { nodes: layoutedNodes, edges: layoutedEdges } = getNodesAndEdges()
+    setNodes(layoutedNodes)
+    setEdges(layoutedEdges)
+  }, [getNodesAndEdges, setNodes, setEdges])
 
   return (
-    <div className="w-full h-[800px]">
+    <div className="w-full h-full">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -161,6 +256,7 @@ export const SchemaVisualizer = ({ tables }: SchemaVisualizerProps): JSX.Element
         <Background />
         <Controls />
         <MiniMap />
+        <TableSelectZoom nodes={nodes} />
       </ReactFlow>
     </div>
   )

@@ -22,7 +22,8 @@ export const SchemaVisualizerPage = (): JSX.Element => {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const CONNECTION_STRING = 'postgresql://postgres:magicstory@localhost:5432/postgres'
+  // const CONNECTION_STRING = 'postgresql://postgres:magicstory@localhost:5432/postgres'
+  const CONNECTION_STRING = 'postgresql://spara:spara_dev@localhost:5432/spara_local'
 
   useEffect(() => {
     const fetchSchemaData = async () => {

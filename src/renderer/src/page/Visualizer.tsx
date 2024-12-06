@@ -1,8 +1,8 @@
 import { useCallback, useLayoutEffect } from 'react'
 import {
   ReactFlow,
-  Node,
-  Edge,
+  Node as FlowNode,
+  Edge as FlowEdge,
   Background,
   useNodesState,
   useEdgesState,
@@ -37,6 +37,14 @@ interface Table {
 interface SchemaVisualizerProps {
   tables: Table[]
 }
+
+interface NodeData extends Record<string, unknown> {
+  label: string
+  schema: string
+  columns: Column[]
+}
+
+type VisualizerNode = FlowNode<NodeData>
 
 const mapDataType = (dataType: string) => {
   const map = {
@@ -110,7 +118,7 @@ const nodeTypes = {
   tableNode: TableNode
 }
 
-const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'TB') => {
+const getLayoutedElements = (nodes: VisualizerNode[], edges: FlowEdge[], direction = 'TB') => {
   const dagreGraph = new dagre.graphlib.Graph()
   dagreGraph.setDefaultEdgeLabel(() => ({}))
 
@@ -180,8 +188,8 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'TB') => 
 
 export const SchemaVisualizer = ({ tables }: SchemaVisualizerProps): JSX.Element => {
   const getNodesAndEdges = useCallback(() => {
-    const nodes: Node[] = []
-    const edges: Edge[] = []
+    const nodes: VisualizerNode[] = []
+    const edges: FlowEdge[] = []
 
     tables.forEach((table) => {
       const nodeId = `${table.schema}.${table.name}`
@@ -233,8 +241,8 @@ export const SchemaVisualizer = ({ tables }: SchemaVisualizerProps): JSX.Element
     return { nodes: layoutedNodes, edges: layoutedEdges }
   }, [tables])
 
-  const [nodes, setNodes, onNodesChange] = useNodesState([])
-  const [edges, setEdges, onEdgesChange] = useEdgesState([])
+  const [nodes, setNodes, onNodesChange] = useNodesState<VisualizerNode>([])
+  const [edges, setEdges, onEdgesChange] = useEdgesState<FlowEdge>([])
 
   useLayoutEffect(() => {
     const { nodes: layoutedNodes, edges: layoutedEdges } = getNodesAndEdges()

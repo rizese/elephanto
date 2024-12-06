@@ -1,24 +1,26 @@
 import { useEffect, useState } from 'react'
 import { SchemaVisualizer } from './Visualizer' // Renamed from SchemaViewer
 
-interface TableData {
+export interface Column {
+  name: string
+  dataType: string
+  isNullable: boolean
+  isPrimaryKey: boolean
+  isForeignKey: boolean
+  references?: {
+    table: string
+    column: string
+  }
+}
+
+export interface Table {
   name: string
   schema: string
-  columns: Array<{
-    name: string
-    dataType: string
-    isNullable: boolean
-    isPrimaryKey: boolean
-    isForeignKey: boolean
-    references?: {
-      table: string
-      column: string
-    }
-  }>
+  columns: Column[]
 }
 
 export const SchemaVisualizerPage = (): JSX.Element => {
-  const [tables, setTables] = useState<TableData[]>([])
+  const [tables, setTables] = useState<Table[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -41,7 +43,7 @@ export const SchemaVisualizerPage = (): JSX.Element => {
           throw new Error(schemasResult.error || 'Failed to fetch schemas')
         }
 
-        const tablesData: TableData[] = []
+        const tablesData: Table[] = []
 
         // For each schema, get tables and their details
         for (const schemaInfo of schemasResult.schemas) {
@@ -59,7 +61,7 @@ export const SchemaVisualizerPage = (): JSX.Element => {
 
             if (!structureResult.success || !structureResult.structure) continue
 
-            const columns = structureResult.structure.map((col) => ({
+            const columns: Column[] = structureResult.structure.map((col) => ({
               name: col.column_name,
               dataType: col.data_type,
               isNullable: col.is_nullable === 'YES',
@@ -116,28 +118,9 @@ export const SchemaVisualizerPage = (): JSX.Element => {
       </div>
     )
   }
-  console.log({ tables })
 
   return (
     <div className="h-screen w-full">
-      {/* {tables.map((table, index) => (
-        <div key={index} className="mb-4">
-          <h3 className="text-lg font-bold">{table.name}</h3>
-          <ul>
-            {table.columns.map((column, colIndex) => (
-              <li key={colIndex} className="ml-4">
-                {column.name} ({column.type})
-                {column.references && (
-                  <span className="text-sm text-gray-600">
-                    {' '}
-                    - references {column.references.table}({column.references.column})
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))} */}
       <SchemaVisualizer tables={tables} />
     </div>
   )

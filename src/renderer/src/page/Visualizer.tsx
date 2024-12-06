@@ -3,20 +3,18 @@ import {
   ReactFlow,
   Node,
   Edge,
-  Controls,
   Background,
   useNodesState,
   useEdgesState,
   ConnectionMode,
   Position,
   MarkerType,
-  Handle,
-  MiniMap
+  Handle
 } from '@xyflow/react'
 import dagre from 'dagre'
 import '@xyflow/react/dist/style.css'
 import { KeyRound, Link } from 'lucide-react'
-import TableSelectZoom from '@renderer/components/TableSelectZoom'
+import VisualizerPanel from '@renderer/components/VisualizerPanel'
 
 interface Column {
   name: string
@@ -84,8 +82,15 @@ const TableNode = ({ data }) => {
       </div>
       <div className="space-y-1">
         {data.columns.map((column: Column, index: number) => (
-          <div key={index} className="flex font-mono space-between text-sm leading-4">
-            <span className={`flex-1 ${column.isPrimaryKey ? 'font-bold' : ''}`}>
+          <div
+            key={index}
+            className="flex hover:bg-gray-100 dark:hover:bg-neutral-600 font-mono space-between text-sm leading-4"
+          >
+            <span
+              className={`flex-1 pr-5  dark:hover:bg-neutral-600 ${
+                column.isPrimaryKey ? 'font-bold' : ''
+              }`}
+            >
               {column.name}
               {column.isNullable && <span className="font-light text-gray-400">?</span>}
             </span>
@@ -254,9 +259,7 @@ export const SchemaVisualizer = ({ tables }: SchemaVisualizerProps): JSX.Element
         defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
       >
         <Background />
-        <Controls />
-        <MiniMap />
-        <TableSelectZoom nodes={nodes} />
+        <VisualizerPanel nodes={nodes} />
       </ReactFlow>
     </div>
   )

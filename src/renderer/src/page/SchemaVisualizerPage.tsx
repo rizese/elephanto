@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { SchemaVisualizer } from './Visualizer' // Renamed from SchemaViewer
+import { DatabaseConnection } from '@renderer/types/settings'
+import { getConnectionStringForDisplay } from '@renderer/App'
 
 export interface Column {
   name: string
@@ -19,19 +21,24 @@ export interface Table {
   columns: Column[]
 }
 
-export const SchemaVisualizerPage = (): JSX.Element => {
+export const SchemaVisualizerPage = ({
+  connection
+}: {
+  connection: DatabaseConnection
+}): JSX.Element => {
   const [tables, setTables] = useState<Table[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  // const CONNECTION_STRING = 'postgresql://postgres:magicstory@localhost:5432/postgres'
-  const CONNECTION_STRING = 'postgresql://spara:spara_dev@localhost:5432/spara_local'
+  // const connectionString = 'postgresql://postgres:magicstory@localhost:5432/postgres'
+  // const connectionString = 'postgresql://spara:spara_dev@localhost:5432/spara_local'
+  const connectionString = getConnectionStringForDisplay(connection)
 
   useEffect(() => {
     const fetchSchemaData = async () => {
       try {
         // Connect to database
-        const connectionResult = await window.electronAPI.database.connect(CONNECTION_STRING)
+        const connectionResult = await window.electronAPI.database.connect(connectionString)
         if (!connectionResult.success) {
           throw new Error(connectionResult.error || 'Failed to connect to database')
         }

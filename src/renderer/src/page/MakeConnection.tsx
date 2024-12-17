@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { HomeScreenCarousel } from '../components/HomeScreenCarousel'
 import FadeOut from '../components/FadeOut'
+import { DatabaseConnection } from '@renderer/types/settings'
+import { Check } from 'lucide-react'
 
 interface ConnectionFormProps {
-  onSuccessfulConnection: () => void
+  onSuccessfulConnection: (connection: DatabaseConnection) => void
 }
 
 type ConnectionResult = {
@@ -16,12 +18,13 @@ type ConnectionResult = {
 export const MakeConnectionPage = ({
   onSuccessfulConnection
 }: ConnectionFormProps): JSX.Element => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<DatabaseConnection>({
     host: 'localhost',
     port: '5432',
     database: 'postgres',
-    user: 'postgres',
-    password: ''
+    username: 'postgres',
+    password: '',
+    name: ''
   })
   const [isConnecting, setIsConnecting] = useState(false)
   const [isTesting, setIsTesting] = useState(false)
@@ -31,11 +34,11 @@ export const MakeConnectionPage = ({
 
   const getConnectionStringForDisplay = (): string => {
     const password = showPassword ? formData.password : '*'.repeat(formData.password.length)
-    return `postgresql://${formData.user}${formData.password && ':' + password}${(formData.user || formData.password) && '@'}${formData.host}${formData.port && ':' + formData.port}${formData.database && '/'}${formData.database}`
+    return `postgresql://${formData.username}${formData.password && ':' + password}${(formData.username || formData.password) && '@'}${formData.host}${formData.port && ':' + formData.port}${formData.database && '/'}${formData.database}`
   }
 
   const getConnectionString = (): string => {
-    return `postgresql://${formData.user}${(formData.user || formData.password) && ':'}${formData.password}${(formData.user || formData.password) && '@'}${formData.host}:${formData.port}${formData.database && '/'}${formData.database}`
+    return `postgresql://${formData.username}${(formData.username || formData.password) && ':'}${formData.password}${(formData.username || formData.password) && '@'}${formData.host}:${formData.port}${formData.database && '/'}${formData.database}`
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -61,7 +64,7 @@ export const MakeConnectionPage = ({
 
       if (result.success) {
         console.log('Connected to PostgreSQL version:', result.version)
-        onSuccessfulConnection()
+        onSuccessfulConnection(formData)
       } else {
         setError(result.error ? result.error : 'No Postgres server found at that location')
       }
@@ -78,8 +81,12 @@ export const MakeConnectionPage = ({
     setError('')
 
     try {
-      await window.electronAPI.database.connect(getConnectionStringForDisplay())
-      setTestMessage('Connection successful!')
+      const result = await window.electronAPI.database.connect(getConnectionString())
+      if (result.success) {
+        setTestMessage('Connection successful!')
+      } else {
+        setError(result.error?.split(':').pop()?.trim() || 'Test connection failed')
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Test connection failed')
     } finally {
@@ -103,7 +110,7 @@ export const MakeConnectionPage = ({
             <input
               type="text"
               name="user"
-              value={formData.user}
+              value={formData.username}
               onChange={handleChange}
               className="border p-2 rounded w-full dark:bg-zinc-800"
             />
@@ -180,12 +187,15 @@ export const MakeConnectionPage = ({
           <div>
             {error && (
               <FadeOut time={2000}>
-                <div className="text-red-800 italic pb-3">{error}</div>
+                <div className="text-red-800 italic pb-3 uppercase">{error}</div>
               </FadeOut>
             )}
             {testMessage && (
               <FadeOut time={2000}>
-                <div className="text-green-700 italic pb-3">{testMessage}</div>
+                <div className="italic pb-3">
+                  <Check className="w-4 h-4 mr-1 text-green-700 inline-block" />
+                  {testMessage}
+                </div>
               </FadeOut>
             )}
           </div>
@@ -194,7 +204,7 @@ export const MakeConnectionPage = ({
               type="button"
               onClick={handleTest}
               disabled={isTesting}
-              className="bg-amber-600 w-1/6 text-white  py-2 rounded disabled:opacity-50"
+              className="bg-slate-600 w-1/6 text-white py-2 rounded disabled:opacity-50"
             >
               {isTesting ? 'Testing...' : 'Test'}
             </button>

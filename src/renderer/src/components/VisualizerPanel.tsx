@@ -13,7 +13,7 @@ interface VisualizerPanelProps {
   nodes: Node<NodeData>[]
 }
 
-const VisualizerPanel = ({ nodes }: VisualizerPanelProps) => {
+const VisualizerPanel: React.FC<VisualizerPanelProps> = ({ nodes }: VisualizerPanelProps) => {
   const { setCenter, zoomTo, getZoom, fitView } = useReactFlow()
   const [query, setQuery] = useState('')
   const [selectedNode, setSelectedNode] = useState<Node<NodeData> | null>(null)
@@ -25,11 +25,11 @@ const VisualizerPanel = ({ nodes }: VisualizerPanelProps) => {
           (node.data?.label || node.id).toLowerCase().includes(query.toLowerCase())
         )
 
-  const handleZoom = (delta: number) => {
+  const handleZoom = (delta: number): void => {
     zoomTo(getZoom() + delta, { duration: 300 })
   }
 
-  const handleNodeSelect = (node: Node<NodeData>) => {
+  const handleNodeSelect = (node: Node<NodeData>): void => {
     if (node) {
       setSelectedNode(node)
       setCenter(node.position.x + 125, node.position.y + 100, { zoom: 1, duration: 800 })
@@ -41,36 +41,43 @@ const VisualizerPanel = ({ nodes }: VisualizerPanelProps) => {
       position="top-center"
       className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg  mx-0 py-2 px-3"
     >
-      <div className="flex flex-row gap-2 items-center">
+      <div className="flex flex-row gap-1 items-center">
         <button
           onClick={() => handleZoom(-0.2)}
-          className="p-2 rounded hover:bg-gray-100 dark:hover:bg-neutral-700"
+          className=" rounded hover:bg-gray-100 dark:hover:bg-neutral-700"
           aria-label="Zoom out"
         >
-          <ZoomOut className="w-5 h-5" />
+          <code>SQL</code>
+        </button>
+        <button
+          onClick={() => handleZoom(-0.2)}
+          className=" rounded hover:bg-gray-100 dark:hover:bg-neutral-700"
+          aria-label="Zoom out"
+        >
+          <ZoomOut className="w-7 h-7 p-1" />
         </button>
         <button
           onClick={() => handleZoom(0.2)}
-          className="p-2 rounded hover:bg-gray-100 dark:hover:bg-neutral-700"
+          className=" rounded hover:bg-gray-100 dark:hover:bg-neutral-700"
           aria-label="Zoom in"
         >
-          <ZoomIn className="w-5 h-5" />
+          <ZoomIn className="w-7 h-7 p-1" />
         </button>
         <button
           onClick={() => fitView({ duration: 800 })}
-          className="p-2 rounded hover:bg-gray-100 dark:hover:bg-neutral-700"
+          className=" rounded hover:bg-gray-100 dark:hover:bg-neutral-700"
           aria-label="Fit view"
         >
-          <Shrink className="w-5 h-5" />
+          <Shrink className="w-7 h-7 p-1" />
         </button>
         <button
           onClick={() => zoomTo(1, { duration: 800 })}
-          className="p-2 rounded hover:bg-gray-100 dark:hover:bg-neutral-700"
+          className=" rounded hover:bg-gray-100 dark:hover:bg-neutral-700"
           aria-label="Reset zoom"
         >
-          <Expand className="w-5 h-5" />
+          <Expand className="w-7 h-7 p-1" />
         </button>
-        <div className="relative w-48">
+        <div className="relative w-48 ml-1">
           <Combobox value={selectedNode} immediate onChange={handleNodeSelect}>
             {selectedNode && (
               <X

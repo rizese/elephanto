@@ -13,14 +13,6 @@ interface DatabaseConnection {
   lastError: string | null
 }
 
-interface TableStructure {
-  column_name: string
-  data_type: string
-  is_nullable: string
-  column_default: string | null
-  character_maximum_length: number | null
-}
-
 interface ForeignKeyRelation {
   constraint_name: string
   table_schema: string

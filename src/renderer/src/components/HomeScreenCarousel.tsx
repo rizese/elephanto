@@ -2,13 +2,10 @@ import '@fontsource/questrial' // Imports Questrial font
 
 const Logo = ({ className = 'w-full' }: { className?: string }): JSX.Element => {
   return (
-    <h1
-      className={
-        className + ' font-questrial text-4xl drop-shadow-logo tracking-tight text-neutral-950'
-      }
-    >
-      elephanto
-    </h1>
+    <div className={`flex flex-col tracking-tight text-neutral-950 font-questrial drop-shadow-logo ${className}`}>
+      <h1 className="text-4xl">elephanto</h1>
+      <p className="text-md text-neutral-950">alpha release</p>
+    </div>
   )
 }
 

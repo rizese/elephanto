@@ -6,12 +6,15 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        questrial: ['Questrial', 'sans-serif']
+        questrial: ['Questrial', 'sans-serif'],
       },
       dropShadow: {
-        logo: '-1px 3px 4px rgba(255, 255, 255, 0.8)'
-      }
-    }
+        logo: '-1px 3px 4px rgba(255, 255, 255, 0.8)',
+      },
+      colors: {
+        'zinc-850': '#1b1b1f',
+      },
+    },
   },
-  plugins: [require('@tailwindcss/forms')]
-}
+  plugins: [require('@tailwindcss/forms')],
+};

@@ -3,10 +3,13 @@ import {
   getConnectionStringForDisplay,
 } from '@renderer/App';
 import { DatabaseConnection } from '@renderer/types/settings';
-import { CircleAlert, Check } from 'lucide-react';
+import { CircleAlert, Check, Zap } from 'lucide-react';
 import { useState } from 'react';
 import FadeOut from './FadeOut';
-import { ConnectionFormProps } from '@renderer/page/MakeConnection';
+import {
+  ConnectionFormProps,
+  ConnectionResult,
+} from '@renderer/page/MakeConnection';
 
 export const NewConnectionForm = ({
   onSuccessfulConnection,
@@ -205,7 +208,7 @@ export const NewConnectionForm = ({
             onClick={handleSubmit}
             className="bg-violet-600 hover:bg-violet-700 flex-1 text-white px-4 py-2 rounded disabled:opacity-50"
           >
-            {isConnecting ? 'Connecting...' : 'Connect'}
+            {isConnecting ? 'Connecting...' : <>Connect</>}
           </button>
         </div>
       </div>

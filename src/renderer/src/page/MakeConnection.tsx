@@ -3,10 +3,18 @@ import { HomeScreenCarousel } from '../components/HomeScreenCarousel';
 import { DatabaseConnection } from '@renderer/types/settings';
 import SlidePanel from '@renderer/components/SlidePanel';
 import { NewConnectionForm } from '@renderer/components/NewConnectionForm';
+import { Plus, X } from 'lucide-react';
 
 export interface ConnectionFormProps {
   onSuccessfulConnection: (connection: DatabaseConnection) => void;
 }
+
+export type ConnectionResult = {
+  success: boolean;
+  version?: string;
+  error?: string;
+  serverVersion?: string;
+};
 
 const previousConnections: DatabaseConnection[] = [
   {
@@ -46,6 +54,7 @@ export const MakeConnectionPage = ({
       </div>
       <div className="w-1/2 relative">
         <div className="p-5 flex flex-col gap-2">
+          {/* todo - create SavedConnections component */}
           {previousConnections.map((connection, index) => (
             <button
               key={index}

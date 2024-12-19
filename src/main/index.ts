@@ -1,54 +1,54 @@
 // src/main/index.ts
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
-import { join } from 'path'
-import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import icon from '../../resources/icon.png?asset'
-import { Client, QueryResult } from 'pg'
-import { DatabaseError } from 'pg-protocol'
+import { app, shell, BrowserWindow, ipcMain } from 'electron';
+import { join } from 'path';
+import { electronApp, optimizer, is } from '@electron-toolkit/utils';
+import icon from '../../resources/icon.png?asset';
+import { Client, QueryResult } from 'pg';
+import { DatabaseError } from 'pg-protocol';
 
 // Types for database operations
-interface DatabaseConnection {
-  client: Client | null
-  isConnected: boolean
-  lastError: string | null
+interface DatabaseClient {
+  client: Client | null;
+  isConnected: boolean;
+  lastError: string | null;
 }
 
 interface ForeignKeyRelation {
-  constraint_name: string
-  table_schema: string
-  table_name: string
-  column_name: string
-  foreign_table_schema: string
-  foreign_table_name: string
-  foreign_column_name: string
+  constraint_name: string;
+  table_schema: string;
+  table_name: string;
+  column_name: string;
+  foreign_table_schema: string;
+  foreign_table_name: string;
+  foreign_column_name: string;
 }
 
 // Database state
-let dbState: DatabaseConnection = {
+let dbState: DatabaseClient = {
   client: null,
   isConnected: false,
-  lastError: null
-}
+  lastError: null,
+};
 
 // Query timeout wrapper
 const executeQueryWithTimeout = async <T>(
   query: string,
   params: any[] = [],
-  timeout: number = 30000
+  timeout: number = 30000,
 ): Promise<QueryResult<T>> => {
   if (!dbState.client) {
-    throw new Error('Database not connected')
+    throw new Error('Database not connected');
   }
 
   const timeoutPromise = new Promise<never>((_, reject) => {
     setTimeout(() => {
-      reject(new Error(`Query timed out after ${timeout}ms`))
-    }, timeout)
-  })
+      reject(new Error(`Query timed out after ${timeout}ms`));
+    }, timeout);
+  });
 
-  const queryPromise = dbState.client.query(query, params)
-  return Promise.race([queryPromise, timeoutPromise])
-}
+  const queryPromise = dbState.client.query(query, params);
+  return Promise.race([queryPromise, timeoutPromise]);
+};
 
 function createWindow(): void {
   // Create the browser window.
@@ -60,25 +60,25 @@ function createWindow(): void {
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
-    }
-  })
+      sandbox: false,
+    },
+  });
 
   mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
-  })
+    mainWindow.show();
+  });
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
-    return { action: 'deny' }
-  })
+    shell.openExternal(details.url);
+    return { action: 'deny' };
+  });
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
+    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+    mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
   }
 }
 
@@ -87,56 +87,61 @@ function createWindow(): void {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron')
+  electronApp.setAppUserModelId('com.electron');
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
   // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
   app.on('browser-window-created', (_, window) => {
-    optimizer.watchWindowShortcuts(window)
-  })
+    optimizer.watchWindowShortcuts(window);
+  });
 
-  createWindow()
+  createWindow();
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
-  })
-})
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
+});
 
 // Register IPC Handlers
 ipcMain.handle('db:connect', async (_event, connectionString: string) => {
   try {
     if (dbState.client) {
-      await dbState.client.end()
+      await dbState.client.end();
     }
 
-    dbState.client = new Client(connectionString)
-    await dbState.client.connect()
+    // Add sslmode=require to connection string if not already present
+    const connectionWithSSL = connectionString.includes('sslmode=')
+      ? connectionString
+      : `${connectionString}${connectionString.includes('?') ? '&' : '?'}sslmode=require`;
 
-    const result = await dbState.client.query('SELECT version()')
-    dbState.isConnected = true
-    dbState.lastError = null
+    dbState.client = new Client(connectionWithSSL);
+    await dbState.client.connect();
+
+    const result = await dbState.client.query('SELECT version()');
+    dbState.isConnected = true;
+    dbState.lastError = null;
 
     return {
       success: true,
       version: result.rows[0].version,
-      serverVersion: result.rows[0].version.split(' ')[1]
-    }
+      serverVersion: result.rows[0].version.split(' ')[1],
+    };
   } catch (error) {
     dbState = {
       client: null,
       isConnected: false,
-      lastError: error instanceof Error ? error.message : 'Unknown error'
-    }
+      lastError: error instanceof Error ? error.message : 'Unknown error',
+    };
 
     return {
       success: false,
-      error: dbState.lastError ?? undefined
-    }
+      error: dbState.lastError ?? undefined,
+    };
   }
-})
+});
 
 ipcMain.handle('db:get-schemas', async () => {
   try {
@@ -148,16 +153,16 @@ ipcMain.handle('db:get-schemas', async () => {
       WHERE table_schema NOT IN ('pg_catalog', 'information_schema')
       GROUP BY table_schema
       ORDER BY table_schema;
-    `
-    const result = await executeQueryWithTimeout(query)
-    return { success: true, schemas: result.rows }
+    `;
+    const result = await executeQueryWithTimeout(query);
+    return { success: true, schemas: result.rows };
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
   }
-})
+});
 
 ipcMain.handle('db:get-tables', async (_event, schema: string) => {
   try {
@@ -169,19 +174,21 @@ ipcMain.handle('db:get-tables', async (_event, schema: string) => {
       FROM information_schema.tables t
       WHERE table_schema = $1
       ORDER BY table_name;
-    `
-    const result = await executeQueryWithTimeout(query, [schema])
-    return { success: true, tables: result.rows }
+    `;
+    const result = await executeQueryWithTimeout(query, [schema]);
+    return { success: true, tables: result.rows };
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
   }
-})
-ipcMain.handle('db:get-table-structure', async (_event, schema: string, table: string) => {
-  try {
-    const query = `
+});
+ipcMain.handle(
+  'db:get-table-structure',
+  async (_event, schema: string, table: string) => {
+    try {
+      const query = `
       SELECT
         c.column_name,
         c.data_type,
@@ -219,20 +226,23 @@ ipcMain.handle('db:get-table-structure', async (_event, schema: string, table: s
       WHERE c.table_schema = $1
         AND c.table_name = $2
       ORDER BY c.ordinal_position;
-    `
-    const result = await executeQueryWithTimeout(query, [schema, table])
-    return { success: true, structure: result.rows }
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+    `;
+      const result = await executeQueryWithTimeout(query, [schema, table]);
+      return { success: true, structure: result.rows };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
     }
-  }
-})
+  },
+);
 
-ipcMain.handle('db:get-relations', async (_event, schema: string, table: string) => {
-  try {
-    const query = `
+ipcMain.handle(
+  'db:get-relations',
+  async (_event, schema: string, table: string) => {
+    try {
+      const query = `
       SELECT
         tc.constraint_name,
         tc.table_schema,
@@ -251,29 +261,33 @@ ipcMain.handle('db:get-relations', async (_event, schema: string, table: string)
       WHERE tc.constraint_type = 'FOREIGN KEY'
         AND tc.table_schema = $1
         AND tc.table_name = $2;
-    `
-    const result = await executeQueryWithTimeout<ForeignKeyRelation>(query, [schema, table])
-    return { success: true, relations: result.rows }
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+    `;
+      const result = await executeQueryWithTimeout<ForeignKeyRelation>(query, [
+        schema,
+        table,
+      ]);
+      return { success: true, relations: result.rows };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
     }
-  }
-})
+  },
+);
 
 ipcMain.handle('db:execute-query', async (_event, query: string) => {
   try {
-    const result = await executeQueryWithTimeout(query)
+    const result = await executeQueryWithTimeout(query);
     return {
       success: true,
       rows: result.rows,
       rowCount: result.rowCount,
       fields: result.fields.map((f) => ({
         name: f.name,
-        dataType: f.dataTypeID
-      }))
-    }
+        dataType: f.dataTypeID,
+      })),
+    };
   } catch (error) {
     if (error instanceof DatabaseError) {
       return {
@@ -282,31 +296,31 @@ ipcMain.handle('db:execute-query', async (_event, query: string) => {
         position: error.position,
         detail: error.detail,
         hint: error.hint,
-        code: error.code
-      }
+        code: error.code,
+      };
     }
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
   }
-})
+});
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    app.quit()
+    app.quit();
   }
-})
+});
 
 // Handle database disconnection on app quit
 app.on('before-quit', async () => {
   if (dbState.client) {
-    console.log('Closing database connection...')
-    await dbState.client.end()
-    dbState.client = null
-    dbState.isConnected = false
+    console.log('Closing database connection...');
+    await dbState.client.end();
+    dbState.client = null;
+    dbState.isConnected = false;
   }
-})
+});

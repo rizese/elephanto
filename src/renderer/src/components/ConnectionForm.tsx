@@ -3,7 +3,7 @@ import {
   getConnectionStringForDisplay,
 } from '@renderer/App';
 import { DatabaseConnection } from '@renderer/types/settings';
-import { CircleAlert, Check, Zap } from 'lucide-react';
+import { CircleAlert, Check } from 'lucide-react';
 import { useState } from 'react';
 import FadeOut from './FadeOut';
 import {
@@ -11,7 +11,7 @@ import {
   ConnectionResult,
 } from '@renderer/page/MakeConnection';
 
-export const NewConnectionForm = ({
+export const ConnectionForm = ({
   onSuccessfulConnection,
 }: ConnectionFormProps): JSX.Element => {
   const [formData, setFormData] = useState<DatabaseConnection>({

@@ -4,7 +4,8 @@ import { DatabaseConnection } from '@renderer/types/settings';
 import SlidePanel from '@renderer/components/SlidePanel';
 import { ConnectionForm } from '@renderer/components/ConnectionForm';
 import { SavedConnections } from '@renderer/components/SavedConnections';
-import { Plus } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
+import { getConnectionString } from '@renderer/App';
 
 export interface ConnectionFormProps {
   onSuccessfulConnection: (connection: DatabaseConnection) => void;
@@ -53,6 +54,7 @@ export const MakeConnectionPage = ({
   >();
   const [connections, setConnections] =
     useState<DatabaseConnection[]>(previousConnections);
+  const [error, setError] = useState<string>();
 
   const handleEdit = (connection: DatabaseConnection) => {
     setSelectedConnection(connection);
@@ -79,9 +81,26 @@ export const MakeConnectionPage = ({
             connections={connections}
             onEdit={handleEdit}
             onDelete={handleDelete}
-            onSelect={(connection) => {
-              setSelectedConnection(connection);
-              setIsOpen(true);
+            error={error}
+            clearError={() => setError(undefined)}
+            onSelect={async (connection) => {
+              try {
+                const connectionString = getConnectionString(connection);
+                const result =
+                  await window.electronAPI.database.connect(connectionString);
+
+                if (result.success) {
+                  onSuccessfulConnection(connection);
+                } else {
+                  setError(result.error || 'Failed to connect to database');
+                }
+              } catch (err) {
+                setError(
+                  err instanceof Error
+                    ? err.message
+                    : 'Failed to connect to database',
+                );
+              }
             }}
           />
         </div>
@@ -97,6 +116,11 @@ export const MakeConnectionPage = ({
         </div>
 
         <SlidePanel isOpen={isOpen} direction="right">
+          <div className="flex justify-end pb-0">
+            <button className="p-5 pb-0" onClick={() => setIsOpen(false)}>
+              <X className="inline-block" />
+            </button>
+          </div>
           <ConnectionForm
             connection={selectedConnection}
             onSuccessfulConnection={(connection) => {

@@ -1,13 +1,16 @@
 import { DatabaseConnection } from '@renderer/types/settings';
-import { Edit2, Trash2 } from 'lucide-react';
+import { Edit2, Trash2, CircleAlert } from 'lucide-react';
 import { useState } from 'react';
 import { DeleteConfirmation } from './DeleteConfirmation';
+import FadeOut from './FadeOut';
 
 interface SavedConnectionsProps {
   connections: DatabaseConnection[];
   onEdit: (connection: DatabaseConnection) => void;
   onDelete: (connection: DatabaseConnection) => void;
   onSelect: (connection: DatabaseConnection) => void;
+  error?: string;
+  clearError?: () => void;
 }
 
 export const SavedConnections = ({
@@ -15,6 +18,8 @@ export const SavedConnections = ({
   onEdit,
   onDelete,
   onSelect,
+  error,
+  clearError,
 }: SavedConnectionsProps): JSX.Element => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [deleteConnection, setDeleteConnection] =
@@ -30,6 +35,14 @@ export const SavedConnections = ({
 
   return (
     <div className="flex flex-col gap-2">
+      {error && (
+        <FadeOut time={2000} onComplete={clearError}>
+          <div className="text-red-800 italic pb-3 uppercase flex items-center">
+            <CircleAlert className="w-4 h-4 mr-1 inline-block" />
+            {error}
+          </div>
+        </FadeOut>
+      )}
       {connections.map((connection, index) => (
         <div
           key={index}
@@ -38,7 +51,7 @@ export const SavedConnections = ({
           onMouseLeave={() => setHoveredIndex(null)}
         >
           <button
-            className="flex flex-col w-full text-left truncate p-5 rounded-md border border-zinc-800 hover:bg-zinc-800"
+            className="group/item flex flex-col w-full text-left truncate p-5 rounded-md border border-zinc-800 hover:bg-zinc-800"
             onClick={() => onSelect(connection)}
           >
             <div className="text-lg font-medium">
@@ -50,26 +63,39 @@ export const SavedConnections = ({
           </button>
 
           {hoveredIndex === index && (
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex px-1 gap-2 bg-zinc-850 rounded-full">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit(connection);
-                }}
-                className="p-2 rounded-full hover:bg-zinc-700"
-              >
-                <Edit2 className="w-4 h-4" />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setDeleteConnection(connection);
-                }}
-                className="p-2 rounded-full hover:bg-zinc-700"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
+            <>
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-row gap-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelect(connection);
+                  }}
+                  className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-1.5 rounded text-sm"
+                >
+                  Connect
+                </button>
+                <div className=" rounded-full bg-zinc-850 px-1 flex gap-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(connection);
+                    }}
+                    className="p-2 rounded-full hover:bg-zinc-700"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteConnection(connection);
+                    }}
+                    className="p-2 rounded-full hover:bg-zinc-700"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </>
           )}
         </div>
       ))}

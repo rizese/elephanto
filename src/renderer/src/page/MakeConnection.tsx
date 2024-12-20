@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { HomeScreenCarousel } from '../components/HomeScreenCarousel';
+import { ElephantoScreen } from '../components/HomeScreenCarousel';
 import { DatabaseConnection } from '@renderer/types/settings';
 import SlidePanel from '@renderer/components/SlidePanel';
 import { ConnectionForm } from '@renderer/components/ConnectionForm';
@@ -73,7 +73,7 @@ export const MakeConnectionPage = ({
   return (
     <div className="w-full flex">
       <div className="w-1/2 h-lvh overflow-hidden">
-        <HomeScreenCarousel />
+        <ElephantoScreen />
       </div>
       <div className="w-1/2 relative">
         <div className="p-5">

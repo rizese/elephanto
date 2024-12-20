@@ -113,9 +113,11 @@ ipcMain.handle('db:connect', async (_event, connectionString: string) => {
     }
 
     // Add sslmode=require to connection string if not already present
-    const connectionWithSSL = connectionString.includes('sslmode=')
-      ? connectionString
-      : `${connectionString}${connectionString.includes('?') ? '&' : '?'}sslmode=require`;
+    const connectionWithSSL =
+      connectionString.includes('sslmode=') ||
+      connectionString.includes('localhost')
+        ? connectionString
+        : `${connectionString}${connectionString.includes('?') ? '&' : '?'}sslmode=require`;
 
     dbState.client = new Client(connectionWithSSL);
     await dbState.client.connect();
@@ -139,6 +141,24 @@ ipcMain.handle('db:connect', async (_event, connectionString: string) => {
     return {
       success: false,
       error: dbState.lastError ?? undefined,
+    };
+  }
+});
+
+ipcMain.handle('db:disconnect', async () => {
+  try {
+    if (dbState.client) {
+      await dbState.client.end();
+      dbState.client = null;
+      dbState.isConnected = false;
+      dbState.lastError = null;
+      return { success: true };
+    }
+    return { success: true, message: 'Already disconnected' };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 });

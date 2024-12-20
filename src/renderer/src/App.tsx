@@ -1,23 +1,43 @@
-import { useState } from 'react';
+// import { useState } from 'react';
 import { MakeConnectionPage } from './page/MakeConnection';
 import { SchemaVisualizerPage } from './page/SchemaVisualizerPage';
 import { DatabaseConnection } from './types/settings';
-import { AppContextProvider } from './components/AppContextProvider';
+import { useAppContext } from './components/AppContextProvider';
+import { useEffect, useState } from 'react';
 
 export function App(): JSX.Element {
-  const [connection, setConnection] = useState<DatabaseConnection | null>(null);
+  const [hasConnected, setHasConnected] = useState<boolean>(false);
+  const { state, setState } = useAppContext();
   const handleConnect = (connection: DatabaseConnection): void => {
-    setConnection(connection);
+    setHasConnected(true);
+    setState((prev) => ({
+      ...prev,
+      connection,
+    }));
   };
 
+  useEffect(() => {
+    const disconnect = async () => {
+      if (!state.connection && hasConnected) {
+        try {
+          await window.electronAPI.database.disconnect();
+          console.log('Disconnected from database');
+        } catch (error) {
+          console.error('Failed to disconnect from database:', error);
+        }
+      }
+    };
+    disconnect();
+  }, [state.connection, hasConnected]);
+
   return (
-    <AppContextProvider>
-      {connection ? (
-        <SchemaVisualizerPage connection={connection} />
+    <>
+      {state.connection ? (
+        <SchemaVisualizerPage connection={state.connection} />
       ) : (
         <MakeConnectionPage onSuccessfulConnection={handleConnect} />
       )}
-    </AppContextProvider>
+    </>
   );
 }
 

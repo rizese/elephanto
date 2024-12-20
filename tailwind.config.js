@@ -14,6 +14,15 @@ export default {
       colors: {
         'zinc-850': '#1b1b1f',
       },
+      animation: {
+        fadeIn: 'fadeIn ease-in',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+      },
     },
   },
   plugins: [require('@tailwindcss/forms')],

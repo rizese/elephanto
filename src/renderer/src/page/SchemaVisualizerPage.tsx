@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { SchemaVisualizer } from './Visualizer'; // Renamed from SchemaViewer
 import { DatabaseConnection } from '@renderer/types/settings';
 import { getConnectionStringForDisplay } from '@renderer/App';
+import { quantum } from 'ldrs';
 
 export interface Column {
   name: string;
@@ -31,6 +32,8 @@ export const SchemaVisualizerPage = ({
   const [isLoading, setIsLoading] = useState(true);
 
   const connectionString = getConnectionStringForDisplay(connection);
+
+  quantum.register();
 
   useEffect(() => {
     const fetchSchemaData = async () => {
@@ -124,7 +127,7 @@ export const SchemaVisualizerPage = ({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="text-lg">Loading schema...</div>
+        <l-quantum size="70" speed="1.8" color="white"></l-quantum>
       </div>
     );
   }
@@ -138,7 +141,7 @@ export const SchemaVisualizerPage = ({
   }
 
   return (
-    <div className="h-screen w-full">
+    <div className="h-screen w-full animate-[fadeIn_500ms_ease-in]">
       <SchemaVisualizer tables={tables} />
     </div>
   );

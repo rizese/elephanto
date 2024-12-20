@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ElephantoScreen } from '../components/HomeScreenCarousel';
+import { ElephantoScreen } from '../components/ElephantoScreen';
 import { DatabaseConnection } from '@renderer/types/settings';
 import SlidePanel from '@renderer/components/SlidePanel';
 import { ConnectionForm } from '@renderer/components/ConnectionForm';
@@ -49,6 +49,7 @@ export const MakeConnectionPage = ({
   onSuccessfulConnection,
 }: ConnectionFormProps): JSX.Element => {
   const [isOpen, setIsOpen] = useState(false);
+  const [playVideo, setPlayVideo] = useState(false);
   const [selectedConnection, setSelectedConnection] = useState<
     DatabaseConnection | undefined
   >();
@@ -72,8 +73,11 @@ export const MakeConnectionPage = ({
 
   return (
     <div className="w-full flex">
-      <div className="w-1/2 h-lvh overflow-hidden">
-        <ElephantoScreen />
+      <div
+        className="w-1/2 h-lvh overflow-hidden"
+        onClick={() => setPlayVideo((prev) => !prev)}
+      >
+        <ElephantoScreen playVideo={playVideo} />
       </div>
       <div className="w-1/2 relative">
         <div className="p-5">

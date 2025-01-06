@@ -36,6 +36,7 @@
     "@electron-toolkit/eslint-config-prettier": "^2.0.0",
     "@electron-toolkit/eslint-config-ts": "^2.0.0",
     "@electron-toolkit/tsconfig": "^1.0.1",
+    "@types/dagre": "^0.7.52",
     "@types/node": "^20.14.8",
     "@types/pg": "^8.11.10",
     "@types/react": "^18.3.3",

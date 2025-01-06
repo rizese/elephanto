@@ -19,19 +19,20 @@ export interface Table {
   columns: Column[]
 }
 
-export const SchemaVisualizerPage = (): JSX.Element => {
+export const SchemaVisualizerPage = ({
+  connectionString
+}: {
+  connectionString: string
+}): JSX.Element => {
   const [tables, setTables] = useState<Table[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-
-  // const CONNECTION_STRING = 'postgresql://postgres:magicstory@localhost:5432/postgres'
-  const CONNECTION_STRING = 'postgresql://spara:spara_dev@localhost:5432/spara_local'
 
   useEffect(() => {
     const fetchSchemaData = async () => {
       try {
         // Connect to database
-        const connectionResult = await window.electronAPI.database.connect(CONNECTION_STRING)
+        const connectionResult = await window.electronAPI.database.connect(connectionString)
         if (!connectionResult.success) {
           throw new Error(connectionResult.error || 'Failed to connect to database')
         }

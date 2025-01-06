@@ -16,6 +16,11 @@ import '@xyflow/react/dist/style.css'
 import { KeyRound, Link } from 'lucide-react'
 import VisualizerPanel from '@renderer/components/VisualizerPanel'
 
+// prop types
+interface SchemaVisualizerProps {
+  tables: Table[]
+}
+
 interface Column {
   name: string
   dataType: string
@@ -34,17 +39,29 @@ interface Table {
   columns: Column[]
 }
 
-interface SchemaVisualizerProps {
-  tables: Table[]
+// reactflow types
+interface ColumnNodeData extends Record<string, unknown> {
+  name: string
+  index: number
+  dataType: string
+  isNullable: boolean
+  isPrimaryKey: boolean
+  isForeignKey: boolean
+  references?: {
+    table: string
+    column: string
+  }
 }
 
-interface NodeData extends Record<string, unknown> {
+type ColumnNode = FlowNode<ColumnNodeData>
+
+interface TableNodeData extends Record<string, unknown> {
   label: string
   schema: string
   columns: Column[]
 }
 
-type VisualizerNode = FlowNode<NodeData>
+type TableNode = FlowNode<TableNodeData>
 
 const mapDataType = (dataType: string) => {
   const map = {
@@ -55,11 +72,41 @@ const mapDataType = (dataType: string) => {
   return map[dataType] || dataType
 }
 
-const TableNode = ({ data }) => {
+const ColumnNode = ({ data }: { data: ColumnNodeData }) => {
+  return (
+    <div className="">
+      <Handle
+        type="target"
+        position={Position.Right}
+        id={`${data.name}-right`}
+        style={{ opacity: 0 }}
+      />
+      <div
+        key={data.index}
+        className="flex hover:bg-gray-100 dark:hover:bg-neutral-600 font-mono space-between text-sm leading-4"
+      >
+        <span
+          className={`flex-1 pr-5  dark:hover:bg-neutral-600 ${
+            data.isPrimaryKey ? 'font-bold' : ''
+          }`}
+        >
+          {data.name}
+          {data.isNullable && <span className="font-light text-gray-400">?</span>}
+        </span>
+        <span className={`text-gray-400 text-xs`}>
+          {data.isPrimaryKey && <KeyRound className="inline pr-1 h-4 w-4" />}
+          {data.isForeignKey && <Link className="inline pr-1 h-4 w-4" />}
+          {mapDataType(data.dataType).toUpperCase()}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+const TableNode = ({ data }: { data: TableNodeData }) => {
   return (
     <div className="bg-white dark:bg-zinc-700 border-1 border-zinc-300 rounded-lg shadow-lg p-4 min-w-[250px]">
-      {/* Multiple handles on all sides */}
-      <Handle
+      {/* <Handle
         type="source"
         position={Position.Top}
         id={`${data.label}-top`}
@@ -67,14 +114,14 @@ const TableNode = ({ data }) => {
       />
       <Handle
         type="source"
-        position={Position.Right}
-        id={`${data.label}-right`}
-        style={{ opacity: 0 }}
-      />
-      <Handle
-        type="source"
         position={Position.Bottom}
         id={`${data.label}-bottom`}
+        style={{ opacity: 0 }}
+      /> */}
+      <Handle
+        type="source"
+        position={Position.Right}
+        id={`${data.label}-right`}
         style={{ opacity: 0 }}
       />
       <Handle
@@ -90,24 +137,9 @@ const TableNode = ({ data }) => {
       </div>
       <div className="space-y-1">
         {data.columns.map((column: Column, index: number) => (
-          <div
-            key={index}
-            className="flex hover:bg-gray-100 dark:hover:bg-neutral-600 font-mono space-between text-sm leading-4"
-          >
-            <span
-              className={`flex-1 pr-5  dark:hover:bg-neutral-600 ${
-                column.isPrimaryKey ? 'font-bold' : ''
-              }`}
-            >
-              {column.name}
-              {column.isNullable && <span className="font-light text-gray-400">?</span>}
-            </span>
-            <span className={`text-gray-400 text-xs`}>
-              {column.isPrimaryKey && <KeyRound className="inline pr-1 h-4 w-4" />}
-              {column.isForeignKey && <Link className="inline pr-1 h-4 w-4" />}
-              {mapDataType(column.dataType).toUpperCase()}
-            </span>
-          </div>
+          <>
+            <ColumnNode data={{ ...column, index }} />
+          </>
         ))}
       </div>
     </div>
@@ -118,7 +150,11 @@ const nodeTypes = {
   tableNode: TableNode
 }
 
-const getLayoutedElements = (nodes: VisualizerNode[], edges: FlowEdge[], direction = 'TB') => {
+const getLayoutedElements = (
+  nodes: TableNode[],
+  edges: FlowEdge[],
+  direction = 'TB'
+): { nodes: TableNode[]; edges: FlowEdge[] } => {
   const dagreGraph = new dagre.graphlib.Graph()
   dagreGraph.setDefaultEdgeLabel(() => ({}))
 
@@ -166,15 +202,18 @@ const getLayoutedElements = (nodes: VisualizerNode[], edges: FlowEdge[], directi
     let sourcePos: Position
     let targetPos: Position
 
-    if (Math.abs(deltaY) > Math.abs(deltaX)) {
-      // Vertical alignment is stronger
-      sourcePos = deltaY > 0 ? Position.Bottom : Position.Top
-      targetPos = deltaY > 0 ? Position.Top : Position.Bottom
-    } else {
-      // Horizontal alignment is stronger
-      sourcePos = deltaX > 0 ? Position.Right : Position.Left
-      targetPos = deltaX > 0 ? Position.Left : Position.Right
-    }
+    // if (Math.abs(deltaY) > Math.abs(deltaX)) {
+    //   // Vertical alignment is stronger
+    //   sourcePos = deltaY > 0 ? Position.Bottom : Position.Top
+    //   targetPos = deltaY > 0 ? Position.Top : Position.Bottom
+    // } else {
+    //   // Horizontal alignment is stronger
+    //   sourcePos = deltaX > 0 ? Position.Right : Position.Left
+    //   targetPos = deltaX > 0 ? Position.Left : Position.Right
+    // }
+
+    sourcePos = Position.Right
+    targetPos = Position.Left
 
     return {
       ...edge,
@@ -188,7 +227,7 @@ const getLayoutedElements = (nodes: VisualizerNode[], edges: FlowEdge[], directi
 
 export const SchemaVisualizer = ({ tables }: SchemaVisualizerProps): JSX.Element => {
   const getNodesAndEdges = useCallback(() => {
-    const nodes: VisualizerNode[] = []
+    const nodes: TableNode[] = []
     const edges: FlowEdge[] = []
 
     tables.forEach((table) => {
@@ -241,7 +280,7 @@ export const SchemaVisualizer = ({ tables }: SchemaVisualizerProps): JSX.Element
     return { nodes: layoutedNodes, edges: layoutedEdges }
   }, [tables])
 
-  const [nodes, setNodes, onNodesChange] = useNodesState<VisualizerNode>([])
+  const [nodes, setNodes, onNodesChange] = useNodesState<TableNode>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<FlowEdge>([])
 
   useLayoutEffect(() => {

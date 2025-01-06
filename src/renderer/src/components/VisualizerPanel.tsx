@@ -1,40 +1,61 @@
-import { useReactFlow, Panel } from '@xyflow/react'
-import { Node } from '@xyflow/react'
-import { Combobox, ComboboxInput, ComboboxOptions, ComboboxOption } from '@headlessui/react'
-import { useState } from 'react'
-import { ZoomIn, ZoomOut, Shrink, Expand, X } from 'lucide-react'
+import { useReactFlow, Panel } from '@xyflow/react';
+import { Node } from '@xyflow/react';
+import {
+  Combobox,
+  ComboboxInput,
+  ComboboxOptions,
+  ComboboxOption,
+} from '@headlessui/react';
+import { useState } from 'react';
+import {
+  ZoomIn,
+  ZoomOut,
+  Shrink,
+  Expand,
+  X,
+  SquareTerminal,
+  CircleChevronLeft,
+} from 'lucide-react';
+import { useAppContext } from './AppContextProvider';
 
 interface NodeData {
-  label?: string
-  [key: string]: any
+  label?: string;
+  [key: string]: any;
 }
 
 interface VisualizerPanelProps {
-  nodes: Node<NodeData>[]
+  nodes: Node<NodeData>[];
 }
 
-const VisualizerPanel: React.FC<VisualizerPanelProps> = ({ nodes }: VisualizerPanelProps) => {
-  const { setCenter, zoomTo, getZoom, fitView } = useReactFlow()
-  const [query, setQuery] = useState('')
-  const [selectedNode, setSelectedNode] = useState<Node<NodeData> | null>(null)
+export const VisualizerPanel: React.FC<VisualizerPanelProps> = ({
+  nodes,
+}: VisualizerPanelProps) => {
+  const { setCenter, zoomTo, getZoom, fitView } = useReactFlow();
+  const [query, setQuery] = useState('');
+  const [selectedNode, setSelectedNode] = useState<Node<NodeData> | null>(null);
 
   const filteredNodes =
     query === ''
       ? nodes
       : nodes.filter((node) =>
-          (node.data?.label || node.id).toLowerCase().includes(query.toLowerCase())
-        )
+          (node.data?.label || node.id)
+            .toLowerCase()
+            .includes(query.toLowerCase()),
+        );
 
   const handleZoom = (delta: number): void => {
-    zoomTo(getZoom() + delta, { duration: 300 })
-  }
+    zoomTo(getZoom() + delta, { duration: 300 });
+  };
 
   const handleNodeSelect = (node: Node<NodeData>): void => {
     if (node) {
-      setSelectedNode(node)
-      setCenter(node.position.x + 125, node.position.y + 100, { zoom: 1, duration: 800 })
+      setSelectedNode(node);
+      setCenter(node.position.x + 125, node.position.y + 100, {
+        zoom: 1,
+        duration: 800,
+      });
     }
-  }
+  };
 
   return (
     <Panel
@@ -47,7 +68,7 @@ const VisualizerPanel: React.FC<VisualizerPanelProps> = ({ nodes }: VisualizerPa
           className=" rounded hover:bg-gray-100 dark:hover:bg-neutral-700"
           aria-label="Zoom out"
         >
-          <code>SQL</code>
+          <SquareTerminal className="w-7 h-7 p-1" />
         </button>
         <button
           onClick={() => handleZoom(-0.2)}
@@ -83,8 +104,8 @@ const VisualizerPanel: React.FC<VisualizerPanelProps> = ({ nodes }: VisualizerPa
               <X
                 className="w-4 h-4 absolute top-1/2 right-2 transform -translate-y-1/2 text-gray-500 dark:text-neutral-400 cursor-pointer"
                 onClick={() => {
-                  setSelectedNode(null)
-                  setQuery('')
+                  setSelectedNode(null);
+                  setQuery('');
                 }}
               />
             )}
@@ -92,7 +113,9 @@ const VisualizerPanel: React.FC<VisualizerPanelProps> = ({ nodes }: VisualizerPa
               className="w-full bg-gray-50 dark:bg-neutral-700 border rounded px-2 py-1 text-sm"
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Go to table"
-              displayValue={(node: Node<NodeData> | null) => node?.data?.label || node?.id || ''}
+              displayValue={(node: Node<NodeData> | null) =>
+                node?.data?.label || node?.id || ''
+              }
               spellCheck={false}
             />
             <ComboboxOptions
@@ -119,7 +142,28 @@ const VisualizerPanel: React.FC<VisualizerPanelProps> = ({ nodes }: VisualizerPa
         </div>
       </div>
     </Panel>
-  )
-}
+  );
+};
 
-export default VisualizerPanel
+export const ExitButton = () => {
+  const { setState } = useAppContext();
+  return (
+    <Panel
+      position="top-left"
+      className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg  mx-0 py-2 px-2"
+    >
+      <div className="flex flex-row gap-1 items-center">
+        <button
+          onClick={() =>
+            setState((prev) => ({
+              ...prev,
+              connection: undefined,
+            }))
+          }
+        >
+          <CircleChevronLeft className="w-7 h-7 p-1" />
+        </button>
+      </div>
+    </Panel>
+  );
+};

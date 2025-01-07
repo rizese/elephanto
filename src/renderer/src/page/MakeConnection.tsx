@@ -112,7 +112,7 @@ export const MakeConnectionPage = ({
           <button
             type="button"
             onClick={handleNewConnection}
-            className="bg-violet-600 hover:bg-violet-700 flex grow items-center justify-center w-full gap-2 text-white px-4 py-2 rounded disabled:opacity-50"
+            className="bg-violet-600 hover:bg-violet-700 flex grow items-center justify-center w-full gap-2 text-white px-4 py-2 rounded disabled:opacity-50 bg-gradient-to-r from-violet-600 to-fuchsia-500 hover:from-violet-700 hover:to-fuchsia-600"
           >
             <Plus className="inline-block w-4 h-4" />
             New Connection

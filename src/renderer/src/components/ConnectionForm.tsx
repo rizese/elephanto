@@ -83,6 +83,7 @@ export const ConnectionForm = ({
           result.error?.split(':').pop()?.trim() || 'Test connection failed',
         );
       }
+      await window.electronAPI.database.disconnect();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Test connection failed');
     } finally {

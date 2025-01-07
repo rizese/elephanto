@@ -80,10 +80,15 @@ export interface DatabaseAPI {
     hint?: string;
     code?: string;
   }>;
+
+  onConnectionStatus: (
+    callback: (status: { connected: boolean; error: string | null }) => void,
+  ) => () => void;
 }
 
 declare global {
   interface Window {
+    // adding window.electronAPI to the global window object
     electronAPI: {
       database: DatabaseAPI;
     };

@@ -16,6 +16,7 @@ import '@xyflow/react/dist/style.css';
 import { KeyRound, Link } from 'lucide-react';
 import {
   ExitButton,
+  StatusButton,
   VisualizerPanel,
 } from '@renderer/components/VisualizerPanel';
 
@@ -285,6 +286,7 @@ export const SchemaVisualizer = ({
         <Background />
         <VisualizerPanel nodes={nodes} />
         <ExitButton />
+        <StatusButton />
       </ReactFlow>
     </div>
   );

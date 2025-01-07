@@ -11,6 +11,8 @@ interface DatabaseClient {
   client: Client | null;
   isConnected: boolean;
   lastError: string | null;
+  reconnectAttempts: number;
+  maxReconnectAttempts: number;
 }
 
 interface ForeignKeyRelation {
@@ -28,6 +30,8 @@ let dbState: DatabaseClient = {
   client: null,
   isConnected: false,
   lastError: null,
+  reconnectAttempts: 0,
+  maxReconnectAttempts: 3,
 };
 
 // Query timeout wrapper
@@ -82,6 +86,33 @@ function createWindow(): void {
   }
 }
 
+function setupConnectionEventHandlers(
+  client: Client,
+  mainWindow: BrowserWindow,
+) {
+  client.on('error', (err) => {
+    console.error('Database connection error:', err);
+    dbState.isConnected = false;
+    dbState.lastError = err.message;
+
+    // Notify renderer process
+    mainWindow.webContents.send('db:connection-status', {
+      connected: false,
+      error: err.message,
+    });
+  });
+
+  client.on('end', () => {
+    console.log('Database connection ended');
+    dbState.isConnected = false;
+
+    mainWindow.webContents.send('db:connection-status', {
+      connected: false,
+      error: 'Connection ended',
+    });
+  });
+}
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -112,7 +143,6 @@ ipcMain.handle('db:connect', async (_event, connectionString: string) => {
       await dbState.client.end();
     }
 
-    // Add sslmode=require to connection string if not already present
     const connectionWithSSL =
       connectionString.includes('sslmode=') ||
       connectionString.includes('localhost')
@@ -120,8 +150,12 @@ ipcMain.handle('db:connect', async (_event, connectionString: string) => {
         : `${connectionString}${connectionString.includes('?') ? '&' : '?'}sslmode=require`;
 
     dbState.client = new Client(connectionWithSSL);
-    await dbState.client.connect();
+    setupConnectionEventHandlers(
+      dbState.client,
+      BrowserWindow.getFocusedWindow()!,
+    );
 
+    await dbState.client.connect();
     const result = await dbState.client.query('SELECT version()');
     dbState.isConnected = true;
     dbState.lastError = null;
@@ -133,6 +167,7 @@ ipcMain.handle('db:connect', async (_event, connectionString: string) => {
     };
   } catch (error) {
     dbState = {
+      ...dbState,
       client: null,
       isConnected: false,
       lastError: error instanceof Error ? error.message : 'Unknown error',
@@ -140,7 +175,7 @@ ipcMain.handle('db:connect', async (_event, connectionString: string) => {
 
     return {
       success: false,
-      error: dbState.lastError ?? undefined,
+      error: dbState.lastError,
     };
   }
 });
@@ -159,6 +194,46 @@ ipcMain.handle('db:disconnect', async () => {
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+});
+
+ipcMain.handle('db:reconnect', async (_event, connectionString: string) => {
+  try {
+    if (dbState.client) {
+      await dbState.client.end().catch(() => {
+        /* ignore cleanup errors */
+      });
+    }
+
+    const connectionWithSSL =
+      connectionString.includes('sslmode=') ||
+      connectionString.includes('localhost')
+        ? connectionString
+        : `${connectionString}${connectionString.includes('?') ? '&' : '?'}sslmode=require`;
+
+    dbState.client = new Client(connectionWithSSL);
+    setupConnectionEventHandlers(
+      dbState.client,
+      BrowserWindow.getFocusedWindow()!,
+    );
+
+    await dbState.client.connect();
+    dbState.isConnected = true;
+    dbState.lastError = null;
+    dbState.reconnectAttempts = 0;
+
+    return { success: true };
+  } catch (error) {
+    dbState.reconnectAttempts += 1;
+    dbState.lastError =
+      error instanceof Error ? error.message : 'Unknown error';
+
+    return {
+      success: false,
+      error: dbState.lastError,
+      attemptsMade: dbState.reconnectAttempts,
+      maxAttempts: dbState.maxReconnectAttempts,
     };
   }
 });

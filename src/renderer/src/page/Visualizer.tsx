@@ -10,6 +10,7 @@ import {
   Position,
   MarkerType,
   Handle,
+  useReactFlow,
 } from '@xyflow/react';
 import dagre from 'dagre';
 import '@xyflow/react/dist/style.css';
@@ -59,9 +60,28 @@ const mapDataType = (dataType: string) => {
   return map[dataType] || dataType;
 };
 
-const TableNode = ({ data }) => {
+const TableNode = ({ id, data }) => {
+  const { getZoom, setCenter, getNode } = useReactFlow();
+
+  const handleClick = (event) => {
+    const zoom = getZoom();
+    const node = getNode(id);
+    if (zoom < 0.6 && node) {
+      event.stopPropagation();
+      setCenter(node.position.x + 125, node.position.y + 100, {
+        zoom: 1,
+        duration: 800,
+      });
+    } else {
+      console.log('zoom', zoom);
+    }
+  };
+
   return (
-    <div className="bg-white dark:bg-zinc-700 border-1 border-zinc-300 rounded-lg shadow-lg p-4 min-w-[250px]">
+    <div
+      className="bg-white dark:bg-zinc-700 border-1 border-zinc-300 rounded-lg shadow-lg p-4 min-w-[250px]"
+      onClick={handleClick}
+    >
       {/* Multiple handles on all sides */}
       <Handle
         type="source"

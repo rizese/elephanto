@@ -3,6 +3,8 @@ import { SchemaVisualizer } from './Visualizer'; // Renamed from SchemaViewer
 import { DatabaseConnection } from '@renderer/types/settings';
 import { getConnectionStringForDisplay } from '@renderer/App';
 import { quantum } from 'ldrs';
+import SlidePanel from '@renderer/components/SlidePanel';
+import { useAppContext } from '@renderer/components/AppContextProvider';
 
 export interface Column {
   name: string;
@@ -30,6 +32,10 @@ export const SchemaVisualizerPage = ({
   const [tables, setTables] = useState<Table[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const {
+    appState: { showChat },
+    setState,
+  } = useAppContext();
 
   const connectionString = getConnectionStringForDisplay(connection);
 
@@ -143,6 +149,22 @@ export const SchemaVisualizerPage = ({
   return (
     <div className="h-screen w-full animate-[fadeIn_500ms_ease-in]">
       <SchemaVisualizer tables={tables} />
+      <SlidePanel
+        isOpen={showChat}
+        className="w-1/2 max-w-lg h-full bg-transparent dark:bg-transparent"
+        direction="right"
+      >
+        <div className="h-full rounded-2xl flex flex-col items-center justify-center bg-zinc-100 dark:bg-zinc-850">
+          <div>
+            <h1>Hello</h1>
+          </div>
+          <button
+            onClick={() => setState((prev) => ({ ...prev, showChat: false }))}
+          >
+            Close
+          </button>
+        </div>
+      </SlidePanel>
     </div>
   );
 };

@@ -13,8 +13,8 @@ import {
   Shrink,
   Expand,
   X,
-  SquareTerminal,
   CircleChevronLeft,
+  MessageSquareCode,
 } from 'lucide-react';
 import { useAppContext } from './AppContextProvider';
 
@@ -57,47 +57,56 @@ export const VisualizerPanel: React.FC<VisualizerPanelProps> = ({
     }
   };
 
+  const iconClass = 'w-7 h-7 p-1 mt-0.5';
+  const icons = [
+    {
+      icon: <MessageSquareCode className={iconClass} />,
+      label: 'Open SQL',
+      onClick: () => {},
+    },
+    {
+      icon: <ZoomIn className={iconClass} />,
+      label: 'Zoom in',
+      onClick: () => handleZoom(0.2),
+    },
+    {
+      icon: <ZoomOut className={iconClass} />,
+      label: 'Zoom out',
+      onClick: () => handleZoom(-0.2),
+    },
+    {
+      icon: <Shrink className={iconClass} />,
+      label: 'Zoom to fit',
+      onClick: () => fitView({ duration: 800 }),
+    },
+    {
+      icon: <Expand className={iconClass} />,
+      label: 'Zoom to 100%',
+      onClick: () => zoomTo(1, { duration: 800 }),
+    },
+  ] as const;
+
   return (
     <Panel
       position="top-center"
       className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg  mx-0 py-2 px-3"
     >
-      <div className="flex flex-row gap-1 items-center">
-        <button
-          onClick={() => handleZoom(-0.2)}
-          className=" rounded hover:bg-gray-100 dark:hover:bg-neutral-700"
-          aria-label="Zoom out"
-        >
-          <SquareTerminal className="w-7 h-7 p-1" />
-        </button>
-        <button
-          onClick={() => handleZoom(-0.2)}
-          className=" rounded hover:bg-gray-100 dark:hover:bg-neutral-700"
-          aria-label="Zoom out"
-        >
-          <ZoomOut className="w-7 h-7 p-1" />
-        </button>
-        <button
-          onClick={() => handleZoom(0.2)}
-          className=" rounded hover:bg-gray-100 dark:hover:bg-neutral-700"
-          aria-label="Zoom in"
-        >
-          <ZoomIn className="w-7 h-7 p-1" />
-        </button>
-        <button
-          onClick={() => fitView({ duration: 800 })}
-          className=" rounded hover:bg-gray-100 dark:hover:bg-neutral-700"
-          aria-label="Fit view"
-        >
-          <Shrink className="w-7 h-7 p-1" />
-        </button>
-        <button
-          onClick={() => zoomTo(1, { duration: 800 })}
-          className=" rounded hover:bg-gray-100 dark:hover:bg-neutral-700"
-          aria-label="Reset zoom"
-        >
-          <Expand className="w-7 h-7 p-1" />
-        </button>
+      <div className="flex flex-row gap-1 items-center justify-center align-center">
+        {icons.map(({ icon, label, onClick }) => (
+          <div
+            className="leading-none tooltip tooltip-bottom tooltip-accent"
+            key={label}
+            data-tip={label}
+          >
+            <button
+              onClick={onClick}
+              className="rounded hover:bg-gray-100 dark:hover:bg-neutral-700"
+              aria-label={label}
+            >
+              {icon}
+            </button>
+          </div>
+        ))}
         <div className="relative w-48 ml-1">
           <Combobox value={selectedNode} immediate onChange={handleNodeSelect}>
             {selectedNode && (
@@ -152,46 +161,21 @@ export const ExitButton = () => {
       position="top-left"
       className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg  mx-0 py-2 px-2"
     >
-      <div className="flex flex-row gap-1 items-center">
-        <button
-          onClick={() =>
-            setState((prev) => ({
-              ...prev,
-              connection: undefined,
-            }))
-          }
+      <div className="flex flex-row gap-1 items-center justify-center align-center">
+        <div
+          className="leading-none tooltip tooltip-right tooltip-accent"
+          data-tip="Close connection"
         >
-          <CircleChevronLeft className="w-7 h-7 p-1" />
-        </button>
-      </div>
-    </Panel>
-  );
-};
-
-export const StatusButton = () => {
-  const { state, reconnect } = useAppContext();
-  return (
-    <Panel
-      position="bottom-left"
-      className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg  mx-0 py-2 px-2"
-    >
-      <div className="flex flex-row items-center p-1">
-        <div>
-          {state.isConnected ? (
-            <div className="w-3 h-3 bg-green-500 shadow-md shadow-green-500/50 rounded-full" />
-          ) : (
-            <div className="w-3 h-3 bg-red-500 shadow-md shadow-red-500/50 rounded-full" />
-          )}
-        </div>
-        <div>
-          {!state.isConnected && (
-            <button
-              className="ml-3 bg-violet-500 text-white rounded-md px-2 py-1"
-              onClick={() => reconnect()}
-            >
-              Reconnect
-            </button>
-          )}
+          <button
+            onClick={() =>
+              setState((prev) => ({
+                ...prev,
+                connection: undefined,
+              }))
+            }
+          >
+            <CircleChevronLeft className="w-7 h-7 p-1 mt-0.5" />
+          </button>
         </div>
       </div>
     </Panel>

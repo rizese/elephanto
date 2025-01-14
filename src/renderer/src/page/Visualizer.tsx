@@ -16,9 +16,9 @@ import '@xyflow/react/dist/style.css';
 import { KeyRound, Link } from 'lucide-react';
 import {
   ExitButton,
-  StatusButton,
   VisualizerPanel,
 } from '@renderer/components/VisualizerPanel';
+import { StatusButton } from '@renderer/components/StatusButton';
 
 interface Column {
   name: string;

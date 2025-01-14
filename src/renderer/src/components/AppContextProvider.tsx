@@ -10,10 +10,11 @@ type AppState = {
   connectionError?: string;
   otherFlag?: boolean;
   someData?: string;
+  showChat: boolean;
 };
 
 type ContextType = {
-  state: AppState;
+  appState: AppState;
   setState: React.Dispatch<React.SetStateAction<AppState>>;
   reconnect: () => Promise<void>;
 };
@@ -28,6 +29,7 @@ export const AppContextProvider = ({
   const [state, setState] = React.useState<AppState>({
     showCodePanel: false,
     isConnected: false,
+    showChat: false,
   });
 
   useEffect(() => {
@@ -105,7 +107,7 @@ export const AppContextProvider = ({
   }, [state.connection]);
 
   return (
-    <Context.Provider value={{ state, setState, reconnect }}>
+    <Context.Provider value={{ appState: state, setState, reconnect }}>
       {children}
     </Context.Provider>
   );

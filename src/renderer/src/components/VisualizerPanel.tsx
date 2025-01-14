@@ -31,6 +31,7 @@ export const VisualizerPanel: React.FC<VisualizerPanelProps> = ({
   nodes,
 }: VisualizerPanelProps) => {
   const { setCenter, zoomTo, getZoom, fitView } = useReactFlow();
+  const { setState } = useAppContext();
   const [query, setQuery] = useState('');
   const [selectedNode, setSelectedNode] = useState<Node<NodeData> | null>(null);
 
@@ -62,7 +63,7 @@ export const VisualizerPanel: React.FC<VisualizerPanelProps> = ({
     {
       icon: <MessageSquareCode className={iconClass} />,
       label: 'Open SQL',
-      onClick: () => {},
+      onClick: () => setState((prev) => ({ ...prev, showChat: true })),
     },
     {
       icon: <ZoomIn className={iconClass} />,

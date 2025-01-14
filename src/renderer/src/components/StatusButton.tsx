@@ -2,7 +2,7 @@ import { Panel } from '@xyflow/react';
 import { useAppContext } from './AppContextProvider';
 
 export const StatusButton = () => {
-  const { state, reconnect } = useAppContext();
+  const { appState: state, reconnect } = useAppContext();
   return (
     <Panel
       position="bottom-left"

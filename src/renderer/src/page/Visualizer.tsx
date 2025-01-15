@@ -306,7 +306,7 @@ export const SchemaVisualizer = ({
         <Background />
         <VisualizerPanel nodes={nodes} />
         <ExitButton />
-        <StatusButton />
+        {/* <StatusButton /> not working :(  */}
       </ReactFlow>
     </div>
   );

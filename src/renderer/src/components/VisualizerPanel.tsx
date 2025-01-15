@@ -76,12 +76,12 @@ export const VisualizerPanel: React.FC<VisualizerPanelProps> = ({
       onClick: () => handleZoom(-0.2),
     },
     {
-      icon: <Shrink className={iconClass} />,
+      icon: <Expand className={iconClass} />,
       label: 'Zoom to fit',
       onClick: () => fitView({ duration: 800 }),
     },
     {
-      icon: <Expand className={iconClass} />,
+      icon: <Shrink className={iconClass} />,
       label: 'Zoom to 100%',
       onClick: () => zoomTo(1, { duration: 800 }),
     },

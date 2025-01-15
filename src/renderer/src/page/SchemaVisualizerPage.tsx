@@ -5,6 +5,8 @@ import { getConnectionStringForDisplay } from '@renderer/App';
 import { quantum } from 'ldrs';
 import SlidePanel from '@renderer/components/SlidePanel';
 import { useAppContext } from '@renderer/components/AppContextProvider';
+import { CircleArrowUp, X } from 'lucide-react';
+import AutoSizeTextArea from '@renderer/components/AutoSizeTextArea';
 
 export interface Column {
   name: string;
@@ -154,15 +156,35 @@ export const SchemaVisualizerPage = ({
         className="w-1/2 max-w-lg h-full bg-transparent dark:bg-transparent"
         direction="right"
       >
-        <div className="h-full rounded-2xl flex flex-col items-center justify-center bg-zinc-100 dark:bg-zinc-850">
-          <div>
-            <h1>Hello</h1>
-          </div>
+        <div className="absolute top-0 right-0 z-10 flex justify-end pb-0">
           <button
+            className="p-5 pb-0"
             onClick={() => setState((prev) => ({ ...prev, showChat: false }))}
           >
-            Close
+            <X className="inline-block" />
           </button>
+        </div>
+        <div className="h-full rounded-2xl flex flex-col  bg-zinc-100 dark:bg-zinc-850 p-4">
+          <div className="flex-1 flex flex-col gap-4">
+            <div className="chat chat-start">
+              <div className="chat-image avatar">
+                <div className="w-10">
+                  <img alt="Elephanto" src="src/assets/icon.png" />
+                </div>
+              </div>
+
+              <div className="chat-bubble">Welcome back.</div>
+            </div>
+          </div>
+          <div className="flex flew-row gap-2">
+            <AutoSizeTextArea
+              className="w-full flex-1 focus:outline-none focus:shadow-none focus:ring-violet-500 rounded-lg bg-transparent"
+              placeholder="Ask me anything about the schema"
+            />
+            <button className="bg-violet-500 text-white rounded-lg px-4 bg-gradient-to-r from-violet-500 to-violet-600 hover:from-violet-600 hover:to-violet-700">
+              <CircleArrowUp className="w-6 h-6" />
+            </button>
+          </div>
         </div>
       </SlidePanel>
     </div>

@@ -1,10 +1,12 @@
-// src/main/index.ts
 import { app, shell, BrowserWindow, ipcMain } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import icon from '../../resources/icon.png?asset';
 import { Client, QueryResult } from 'pg';
 import { DatabaseError } from 'pg-protocol';
+
+// Global window reference
+let mainWindow: BrowserWindow | null = null;
 
 // Types for database operations
 interface DatabaseClient {
@@ -56,7 +58,7 @@ const executeQueryWithTimeout = async <T>(
 
 function createWindow(): void {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
     show: false,
@@ -69,7 +71,7 @@ function createWindow(): void {
   });
 
   mainWindow.on('ready-to-show', () => {
-    mainWindow.show();
+    mainWindow?.show();
   });
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -84,19 +86,25 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
   }
+
+  // Handle window closed
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
 }
 
-function setupConnectionEventHandlers(
-  client: Client,
-  mainWindow: BrowserWindow,
-) {
+function setupConnectionEventHandlers(client: Client) {
+  if (!mainWindow) {
+    throw new Error('Main window not initialized');
+  }
+
   client.on('error', (err) => {
     console.error('Database connection error:', err);
     dbState.isConnected = false;
     dbState.lastError = err.message;
 
     // Notify renderer process
-    mainWindow.webContents.send('db:connection-status', {
+    mainWindow?.webContents?.send('db:connection-status', {
       connected: false,
       error: err.message,
     });
@@ -106,7 +114,7 @@ function setupConnectionEventHandlers(
     console.log('Database connection ended');
     dbState.isConnected = false;
 
-    mainWindow.webContents.send('db:connection-status', {
+    mainWindow?.webContents?.send('db:connection-status', {
       connected: false,
       error: 'Connection ended',
     });
@@ -139,6 +147,10 @@ app.whenReady().then(() => {
 // Register IPC Handlers
 ipcMain.handle('db:connect', async (_event, connectionString: string) => {
   try {
+    if (!mainWindow) {
+      throw new Error('Main window not initialized');
+    }
+
     if (dbState.client) {
       await dbState.client.end();
     }
@@ -150,10 +162,7 @@ ipcMain.handle('db:connect', async (_event, connectionString: string) => {
         : `${connectionString}${connectionString.includes('?') ? '&' : '?'}sslmode=require`;
 
     dbState.client = new Client(connectionWithSSL);
-    setupConnectionEventHandlers(
-      dbState.client,
-      BrowserWindow.getFocusedWindow()!,
-    );
+    setupConnectionEventHandlers(dbState.client);
 
     await dbState.client.connect();
     const result = await dbState.client.query('SELECT version()');
@@ -200,6 +209,10 @@ ipcMain.handle('db:disconnect', async () => {
 
 ipcMain.handle('db:reconnect', async (_event, connectionString: string) => {
   try {
+    if (!mainWindow) {
+      throw new Error('Main window not initialized');
+    }
+
     if (dbState.client) {
       await dbState.client.end().catch(() => {
         /* ignore cleanup errors */
@@ -213,10 +226,7 @@ ipcMain.handle('db:reconnect', async (_event, connectionString: string) => {
         : `${connectionString}${connectionString.includes('?') ? '&' : '?'}sslmode=require`;
 
     dbState.client = new Client(connectionWithSSL);
-    setupConnectionEventHandlers(
-      dbState.client,
-      BrowserWindow.getFocusedWindow()!,
-    );
+    setupConnectionEventHandlers(dbState.client);
 
     await dbState.client.connect();
     dbState.isConnected = true;
@@ -279,6 +289,7 @@ ipcMain.handle('db:get-tables', async (_event, schema: string) => {
     };
   }
 });
+
 ipcMain.handle(
   'db:get-table-structure',
   async (_event, schema: string, table: string) => {
@@ -419,3 +430,12 @@ app.on('before-quit', async () => {
     dbState.isConnected = false;
   }
 });
+
+// Development specific handling
+if (is.dev) {
+  app.on('before-quit', () => {
+    if (mainWindow) {
+      mainWindow.removeAllListeners('close');
+    }
+  });
+}

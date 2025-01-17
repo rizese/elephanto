@@ -1,5 +1,5 @@
 import Markdown from 'react-markdown';
-import linkify from 'linkifyjs';
+// import linkify from 'linkifyjs';
 
 const LINEBREAK = '{{BREAK}}';
 
@@ -10,8 +10,8 @@ type Props = {
 };
 
 export default function MarkdownText({ className, text }: Props) {
-  let markdownText = formatLinksToMarkdown(text);
-  markdownText = formatNewlinesToMarkdown(markdownText);
+  // let markdownText = formatLinksToMarkdown(text);
+  let markdownText = formatNewlinesToMarkdown(text);
 
   const sections = markdownText.split(LINEBREAK);
 
@@ -45,17 +45,16 @@ export default function MarkdownText({ className, text }: Props) {
           code(props) {
             return props.node?.position?.start.line ==
               props.node?.position?.end.line ? (
+              // single line code blocks
               <code
-                className="rounded-small bg-neutral-100 px-1 py-1"
+                className="text-pink-700 rounded-md bg-neutral-100 bg-opacity-5 hover:bg-opacity-10 px-1 py-px"
                 {...props}
               />
             ) : (
+              // multi line code blocks
               <pre className="w-full overflow-x-auto">
                 <code
-                  className={cn(
-                    'rounded-small bg-neutral-100 px-1 py-1',
-                    props.className,
-                  )}
+                  className={`rounded-small bg-neutral-100 px-1 py-1 ${props.className}`}
                   {...props}
                 />
               </pre>
@@ -96,32 +95,32 @@ export default function MarkdownText({ className, text }: Props) {
  *       our use cases. If we need to be more rigorous follow the markdown guide:
  *       https://www.markdownguide.org/basic-syntax/#links
  */
-function isMarkdownLink(text: string, start: number, end: number) {
-  // assume any link in ](...) is already in markdown format
-  const isStandardLink =
-    text[start - 2] === ']' && text[start - 1] === '(' && text[end] === ')';
+// function isMarkdownLink(text: string, start: number, end: number) {
+//   // assume any link in ](...) is already in markdown format
+//   const isStandardLink =
+//     text[start - 2] === ']' && text[start - 1] === '(' && text[end] === ')';
 
-  // ignore links used as name of link in markdown format
-  // [..](
-  const isLinkName =
-    text[start - 1] === '[' && text[end] === ']' && text[end + 1] === '(';
+//   // ignore links used as name of link in markdown format
+//   // [..](
+//   const isLinkName =
+//     text[start - 1] === '[' && text[end] === ']' && text[end + 1] === '(';
 
-  // when the name of the md link is also a link, linkifyjs captures it as one link
-  // ex: [link](link) -> "link](link"
-  const isConcatedLink = text.includes('](');
+//   // when the name of the md link is also a link, linkifyjs captures it as one link
+//   // ex: [link](link) -> "link](link"
+//   const isConcatedLink = text.includes('](');
 
-  // assume any link in <...> is already in markdown format
-  // NOTE: react-markdown doesn't seem to render these as links so for now pass
-  //       along to linkify.
-  //
-  // const isAngleBracketLink = text[start - 1] === '<' && text[end] === '>'
+//   // assume any link in <...> is already in markdown format
+//   // NOTE: react-markdown doesn't seem to render these as links so for now pass
+//   //       along to linkify.
+//   //
+//   // const isAngleBracketLink = text[start - 1] === '<' && text[end] === '>'
 
-  // we don't render raw html so we shouldn't allow links in this format.
-  // but in case we do leave as is
-  const isATagLink = text.substring(start - 6, start) === 'href="';
+//   // we don't render raw html so we shouldn't allow links in this format.
+//   // but in case we do leave as is
+//   const isATagLink = text.substring(start - 6, start) === 'href="';
 
-  return isStandardLink || isLinkName || isConcatedLink || isATagLink;
-}
+//   return isStandardLink || isLinkName || isConcatedLink || isATagLink;
+// }
 
 /**
  * Formats raw links in a given text to markdown format.
@@ -140,44 +139,44 @@ function isMarkdownLink(text: string, start: number, end: number) {
  * const markdownLink = formatLinksToMarkdown(link);
  * // Returns: 'here is a neat link [https://www.example.com/](https://www.example.com/)'
  */
-function formatLinksToMarkdown(text: string) {
-  const links = linkify
-    .find(text, { defaultProtocol: 'https' })
-    .filter(({ isLink, start, end, value }) => {
-      // exclude links in markdown format
-      return isLink && !isMarkdownLink(text, start, end);
-    });
+// function formatLinksToMarkdown(text: string) {
+//   const links = linkify
+//     .find(text, { defaultProtocol: 'https' })
+//     .filter(({ isLink, start, end, value }) => {
+//       // exclude links in markdown format
+//       return isLink && !isMarkdownLink(text, start, end);
+//     });
 
-  if (!links.length) {
-    return text;
-  }
+//   if (!links.length) {
+//     return text;
+//   }
 
-  // Split text into sections surrounding the links and insert fromatted links
-  const { sections } = links.reduce(
-    (acc, link, linkIdx) => {
-      const before = text.slice(acc.textIdx, link.start);
-      acc.sections.push(before);
+//   // Split text into sections surrounding the links and insert fromatted links
+//   const { sections } = links.reduce(
+//     (acc, link, linkIdx) => {
+//       const before = text.slice(acc.textIdx, link.start);
+//       acc.sections.push(before);
 
-      const markdownLink = `[${link.value}](${link.href})`;
-      acc.sections.push(markdownLink);
+//       const markdownLink = `[${link.value}](${link.href})`;
+//       acc.sections.push(markdownLink);
 
-      if (linkIdx === links.length - 1) {
-        const after = text.slice(link.end, text.length);
-        acc.sections.push(after);
-      }
+//       if (linkIdx === links.length - 1) {
+//         const after = text.slice(link.end, text.length);
+//         acc.sections.push(after);
+//       }
 
-      acc.textIdx = link.end;
+//       acc.textIdx = link.end;
 
-      return acc;
-    },
-    {
-      sections: [] as string[],
-      textIdx: 0,
-    },
-  );
+//       return acc;
+//     },
+//     {
+//       sections: [] as string[],
+//       textIdx: 0,
+//     },
+//   );
 
-  return sections.join('');
-}
+//   return sections.join('');
+// }
 
 function formatNewlinesToMarkdown(text: string) {
   let newText = text;

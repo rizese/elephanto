@@ -3,12 +3,16 @@ import { MessageSquareCode, X, CircleArrowUp } from 'lucide-react';
 import { useAppContext } from './AppContextProvider';
 import AutoSizeTextArea from './AutoSizeTextArea';
 import SlidePanel from './SlidePanel';
+import MarkdownText from './MarkdownText';
 
 export function ChatSlidePanel() {
-  const {
-    appState: { showChat },
-    setState,
-  } = useAppContext();
+  const { appState, setState } = useAppContext();
+  const { showChat, connection } = appState;
+
+  if (!connection) {
+    return null;
+  }
+
   return (
     <>
       <SlidePanel
@@ -17,12 +21,17 @@ export function ChatSlidePanel() {
         direction="right"
       >
         <div className="absolute top-0 -left-12 pt-5 z-10">
-          <button
-            className={`p-3 ${elephantoGradient} rounded-l-xl transition-opacity duration-300 ${showChat ? 'opacity-0' : 'opacity-100'}`}
-            onClick={() => setState((prev) => ({ ...prev, showChat: true }))}
+          <div
+            className={showChat ? '' : 'leading-none tooltip tooltip-left '}
+            data-tip={'Open chat'}
           >
-            <MessageSquareCode className="w-6 h-6 inline-block" />
-          </button>
+            <button
+              className={`p-3 ${elephantoGradient} rounded-l-xl transition-opacity duration-300 ${showChat ? 'opacity-0' : 'opacity-100'}`}
+              onClick={() => setState((prev) => ({ ...prev, showChat: true }))}
+            >
+              <MessageSquareCode className="w-6 h-6 inline-block" />
+            </button>
+          </div>
         </div>
         <div className="absolute top-0 right-0 z-10  pb-0">
           <button
@@ -41,13 +50,18 @@ export function ChatSlidePanel() {
                 </div>
               </div>
 
-              <div className="chat-bubble">Welcome back.</div>
+              <div className="chat-bubble mt-1">Welcome back.</div>
+              <div className="chat-bubble mt-1">
+                <MarkdownText
+                  text={`We're connected to \`${connection.host}\` and viewing the schema for the \`${connection.database}\` database.`}
+                />
+              </div>
             </div>
           </div>
           <div className="flex flew-row gap-2">
             <AutoSizeTextArea
               className="w-full flex-1 focus:outline-none focus:shadow-none focus:ring-violet-500 rounded-lg bg-transparent"
-              placeholder="Ask me anything about the schema"
+              placeholder={`Ask me anything about ${connection.name}`}
             />
             <button
               className={`text-white rounded-lg px-4 ${elephantoGradient}`}

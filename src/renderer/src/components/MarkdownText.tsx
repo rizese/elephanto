@@ -15,7 +15,7 @@ export default function MarkdownText({ className, text }: Props) {
 
   const sections = markdownText.split(LINEBREAK);
 
-  return sections.map((section) => {
+  return sections.map((section, index) => {
     if (!section) {
       return <br />;
     }
@@ -24,6 +24,7 @@ export default function MarkdownText({ className, text }: Props) {
       <Markdown
         children={section}
         className={className}
+        key={index}
         components={{
           a(props) {
             return (

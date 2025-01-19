@@ -1,4 +1,3 @@
-// src/main/index.ts
 import { app, shell, BrowserWindow, ipcMain } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
@@ -6,11 +5,16 @@ import icon from '../../resources/icon.png?asset';
 import { Client, QueryResult } from 'pg';
 import { DatabaseError } from 'pg-protocol';
 
+// Global window reference
+let mainWindow: BrowserWindow | null = null;
+
 // Types for database operations
 interface DatabaseClient {
   client: Client | null;
   isConnected: boolean;
   lastError: string | null;
+  reconnectAttempts: number;
+  maxReconnectAttempts: number;
 }
 
 interface ForeignKeyRelation {
@@ -28,6 +32,8 @@ let dbState: DatabaseClient = {
   client: null,
   isConnected: false,
   lastError: null,
+  reconnectAttempts: 0,
+  maxReconnectAttempts: 3,
 };
 
 // Query timeout wrapper
@@ -52,7 +58,7 @@ const executeQueryWithTimeout = async <T>(
 
 function createWindow(): void {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
     show: false,
@@ -65,7 +71,7 @@ function createWindow(): void {
   });
 
   mainWindow.on('ready-to-show', () => {
-    mainWindow.show();
+    mainWindow?.show();
   });
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -80,6 +86,39 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
   }
+
+  // Handle window closed
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
+}
+
+function setupConnectionEventHandlers(client: Client) {
+  if (!mainWindow) {
+    throw new Error('Main window not initialized');
+  }
+
+  client.on('error', (err) => {
+    console.error('Database connection error:', err);
+    dbState.isConnected = false;
+    dbState.lastError = err.message;
+
+    // Notify renderer process
+    mainWindow?.webContents?.send('db:connection-status', {
+      connected: false,
+      error: err.message,
+    });
+  });
+
+  client.on('end', () => {
+    console.log('Database connection ended');
+    dbState.isConnected = false;
+
+    mainWindow?.webContents?.send('db:connection-status', {
+      connected: false,
+      error: 'Connection ended',
+    });
+  });
 }
 
 // This method will be called when Electron has finished
@@ -108,11 +147,14 @@ app.whenReady().then(() => {
 // Register IPC Handlers
 ipcMain.handle('db:connect', async (_event, connectionString: string) => {
   try {
+    if (!mainWindow) {
+      throw new Error('Main window not initialized');
+    }
+
     if (dbState.client) {
       await dbState.client.end();
     }
 
-    // Add sslmode=require to connection string if not already present
     const connectionWithSSL =
       connectionString.includes('sslmode=') ||
       connectionString.includes('localhost')
@@ -120,8 +162,9 @@ ipcMain.handle('db:connect', async (_event, connectionString: string) => {
         : `${connectionString}${connectionString.includes('?') ? '&' : '?'}sslmode=require`;
 
     dbState.client = new Client(connectionWithSSL);
-    await dbState.client.connect();
+    setupConnectionEventHandlers(dbState.client);
 
+    await dbState.client.connect();
     const result = await dbState.client.query('SELECT version()');
     dbState.isConnected = true;
     dbState.lastError = null;
@@ -133,6 +176,7 @@ ipcMain.handle('db:connect', async (_event, connectionString: string) => {
     };
   } catch (error) {
     dbState = {
+      ...dbState,
       client: null,
       isConnected: false,
       lastError: error instanceof Error ? error.message : 'Unknown error',
@@ -140,7 +184,7 @@ ipcMain.handle('db:connect', async (_event, connectionString: string) => {
 
     return {
       success: false,
-      error: dbState.lastError ?? undefined,
+      error: dbState.lastError,
     };
   }
 });
@@ -159,6 +203,47 @@ ipcMain.handle('db:disconnect', async () => {
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+});
+
+ipcMain.handle('db:reconnect', async (_event, connectionString: string) => {
+  try {
+    if (!mainWindow) {
+      throw new Error('Main window not initialized');
+    }
+
+    if (dbState.client) {
+      await dbState.client.end().catch(() => {
+        /* ignore cleanup errors */
+      });
+    }
+
+    const connectionWithSSL =
+      connectionString.includes('sslmode=') ||
+      connectionString.includes('localhost')
+        ? connectionString
+        : `${connectionString}${connectionString.includes('?') ? '&' : '?'}sslmode=require`;
+
+    dbState.client = new Client(connectionWithSSL);
+    setupConnectionEventHandlers(dbState.client);
+
+    await dbState.client.connect();
+    dbState.isConnected = true;
+    dbState.lastError = null;
+    dbState.reconnectAttempts = 0;
+
+    return { success: true };
+  } catch (error) {
+    dbState.reconnectAttempts += 1;
+    dbState.lastError =
+      error instanceof Error ? error.message : 'Unknown error';
+
+    return {
+      success: false,
+      error: dbState.lastError,
+      attemptsMade: dbState.reconnectAttempts,
+      maxAttempts: dbState.maxReconnectAttempts,
     };
   }
 });
@@ -204,6 +289,7 @@ ipcMain.handle('db:get-tables', async (_event, schema: string) => {
     };
   }
 });
+
 ipcMain.handle(
   'db:get-table-structure',
   async (_event, schema: string, table: string) => {
@@ -344,3 +430,12 @@ app.on('before-quit', async () => {
     dbState.isConnected = false;
   }
 });
+
+// Development specific handling
+if (is.dev) {
+  app.on('before-quit', () => {
+    if (mainWindow) {
+      mainWindow.removeAllListeners('close');
+    }
+  });
+}

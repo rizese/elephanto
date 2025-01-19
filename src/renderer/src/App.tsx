@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 
 export function App(): JSX.Element {
   const [hasConnected, setHasConnected] = useState<boolean>(false);
-  const { state, setState } = useAppContext();
+  const { appState: state, setState } = useAppContext();
   const handleConnect = (connection: DatabaseConnection): void => {
     setHasConnected(true);
     setState((prev) => ({

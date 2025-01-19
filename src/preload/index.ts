@@ -4,11 +4,14 @@ import { contextBridge, ipcRenderer } from 'electron';
 import { DatabaseAPI } from '../renderer/src/types/database';
 
 // Database API
-const dbAPI: DatabaseAPI = {
+const databaseAPI: DatabaseAPI = {
   connect: (connectionString: string) =>
     ipcRenderer.invoke('db:connect', connectionString),
 
-  disconnect: () => ipcRenderer.invoke('db:disconnect'),
+  disconnect: async () => {
+    console.log('disconnected from database');
+    return await ipcRenderer.invoke('db:disconnect');
+  },
   getSchemas: () => ipcRenderer.invoke('db:get-schemas'),
 
   getTables: (schema: string) => ipcRenderer.invoke('db:get-tables', schema),
@@ -21,12 +24,31 @@ const dbAPI: DatabaseAPI = {
 
   executeQuery: (query: string) =>
     ipcRenderer.invoke('db:execute-query', query),
+
+  onConnectionStatus: (
+    callback: (status: { connected: boolean; error: string | null }) => void,
+  ) => {
+    const subscription = (
+      _event: any,
+      status: { connected: boolean; error: string | null },
+    ) => {
+      console.log('Connection status:', status.connected);
+      callback(status);
+    };
+
+    ipcRenderer.on('db:connection-status', subscription);
+
+    return () => {
+      ipcRenderer.removeListener('db:connection-status', subscription);
+    };
+  },
 };
 
 // Use contextBridge to expose our API to the renderer process
+// defining the window.electronAPI object:
 contextBridge.exposeInMainWorld('electronAPI', {
   ...electronAPI,
-  database: dbAPI,
+  database: databaseAPI,
   // Preserve any existing template APIs you want to keep
   ipcRenderer: { ...ipcRenderer },
 });

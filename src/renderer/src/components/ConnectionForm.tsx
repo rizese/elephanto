@@ -83,6 +83,7 @@ export const ConnectionForm = ({
           result.error?.split(':').pop()?.trim() || 'Test connection failed',
         );
       }
+      await window.electronAPI.database.disconnect();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Test connection failed');
     } finally {
@@ -206,7 +207,7 @@ export const ConnectionForm = ({
             type="submit"
             disabled={isConnecting}
             onClick={handleSubmit}
-            className="bg-violet-600 hover:bg-violet-700 flex-1 text-white px-4 py-2 rounded disabled:opacity-50"
+            className="flex-1 text-white px-4 py-2 rounded disabled:opacity-50 bg-gradient-to-r from-violet-600 to-fuchsia-500 hover:from-violet-700 hover:to-fuchsia-600"
           >
             {isConnecting ? 'Connecting...' : <>Connect</>}
           </button>

@@ -3,6 +3,7 @@ import { SchemaVisualizer } from './Visualizer'; // Renamed from SchemaViewer
 import { DatabaseConnection } from '@renderer/types/settings';
 import { getConnectionStringForDisplay } from '@renderer/App';
 import { quantum } from 'ldrs';
+import { ChatSlidePanel } from '@renderer/components/ChatSlidePanel';
 
 export interface Column {
   name: string;
@@ -143,6 +144,7 @@ export const SchemaVisualizerPage = ({
   return (
     <div className="h-screen w-full animate-[fadeIn_500ms_ease-in]">
       <SchemaVisualizer tables={tables} />
+      <ChatSlidePanel />
     </div>
   );
 };

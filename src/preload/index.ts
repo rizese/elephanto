@@ -1,10 +1,10 @@
 // src/preload/index.ts
 import { electronAPI } from '@electron-toolkit/preload';
 import { contextBridge, ipcRenderer } from 'electron';
-import { DatabaseAPI } from '../renderer/src/types/database';
+import { Database, SafeStorage } from '../renderer/src/types/database';
 
 // Database API
-const databaseAPI: DatabaseAPI = {
+const database: Database = {
   connect: (connectionString: string) =>
     ipcRenderer.invoke('db:connect', connectionString),
 
@@ -44,15 +44,24 @@ const databaseAPI: DatabaseAPI = {
   },
 };
 
+const safeStorage: SafeStorage = {
+  encryptAndStore: async (jsonData: object) =>
+    await ipcRenderer.invoke('encrypt-and-store', jsonData),
+
+  decryptAndRetrieve: async () =>
+    await ipcRenderer.invoke('decrypt-and-retrieve'),
+};
+
 // Use contextBridge to expose our API to the renderer process
 // defining the window.electronAPI object:
 contextBridge.exposeInMainWorld('electronAPI', {
   ...electronAPI,
-  database: databaseAPI,
+  database,
+  safeStorage,
   // Preserve any existing template APIs you want to keep
   ipcRenderer: { ...ipcRenderer },
 });
 
 // `exposeInMainWorld` can't detect attributes and methods of `exports` in runtime.
 // Use the explicit export to make attributes and methods available in the preload process.
-export type { DatabaseAPI } from '../renderer/src/types/database';
+export type { Database, SafeStorage } from '../renderer/src/types/database';

@@ -4,11 +4,30 @@ import { SchemaVisualizerPage } from './page/SchemaVisualizerPage';
 import { DatabaseConnection } from './types/settings';
 import { useAppContext } from './components/AppContextProvider';
 import { useEffect, useState } from 'react';
+import { useSafeStorage } from './hooks/useSafeStorage';
 
 export function App(): JSX.Element {
   const [hasConnected, setHasConnected] = useState<boolean>(false);
   const { appState: state, setState } = useAppContext();
-  const handleConnect = (connection: DatabaseConnection): void => {
+  const { decryptAndRetrieve, encryptAndStore } = useSafeStorage();
+
+  useEffect(() => {
+    const getConnections = async () => {
+      const connections =
+        await decryptAndRetrieve<DatabaseConnection[]>('connections');
+      if (connections) {
+        console.log(connections);
+      }
+    };
+    getConnections();
+  }, []);
+
+  const handleConnect = async (connection: DatabaseConnection) => {
+    await encryptAndStore(
+      'connections',
+      connection.name ?? 'need to make connection.name required',
+      connection,
+    );
     setHasConnected(true);
     setState((prev) => ({
       ...prev,

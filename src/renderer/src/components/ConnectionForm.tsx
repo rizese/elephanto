@@ -3,30 +3,44 @@ import {
   getConnectionStringForDisplay,
 } from '@renderer/App';
 import { DatabaseConnection } from '@renderer/types/settings';
-import { CircleAlert, Check } from 'lucide-react';
+import { CircleAlert, Check, Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 import FadeOut from './FadeOut';
-import {
-  ConnectionFormProps,
-  ConnectionResult,
-} from '@renderer/page/MakeConnection';
+import { ConnectionResult } from '@renderer/page/MakeConnection';
+import { useSafeStorage } from '@renderer/hooks/useSafeStorage';
+import { useAppContext } from './AppContextProvider';
 
 export const ConnectionForm = ({
   onSuccessfulConnection,
-}: ConnectionFormProps): JSX.Element => {
+}: {
+  onSuccessfulConnection?: (connection: DatabaseConnection) => void;
+}): JSX.Element => {
   const [formData, setFormData] = useState<DatabaseConnection>({
     host: 'localhost',
     port: '5432',
     database: 'postgres',
     username: 'postgres',
     password: '',
-    name: '',
   });
   const [isConnecting, setIsConnecting] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [error, setError] = useState('');
   const [testMessage, setTestMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const { encryptAndStore } = useSafeStorage();
+  const { setState } = useAppContext();
+
+  const makeName = (connection: DatabaseConnection): string => {
+    function capitalize(s: string): string {
+      return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+
+    if (connection.host === 'localhost') {
+      return `Local ${capitalize(connection.database)}`;
+    }
+
+    return `${capitalize(connection.host)} ${capitalize(connection.database)}`;
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
@@ -43,7 +57,6 @@ export const ConnectionForm = ({
     e?.preventDefault();
     setIsConnecting(true);
     setError('');
-
     try {
       const connectionString = getConnectionString(formData);
       const result: ConnectionResult =
@@ -51,8 +64,12 @@ export const ConnectionForm = ({
       console.log({ result });
 
       if (result.success) {
-        console.log('Connected to PostgreSQL version:', result.version);
-        onSuccessfulConnection(formData);
+        await encryptAndStore('connections', makeName(formData), formData);
+        setState((prev) => ({
+          ...prev,
+          connection: formData,
+        }));
+        onSuccessfulConnection?.(formData);
       } else {
         setError(
           result.error
@@ -122,9 +139,13 @@ export const ConnectionForm = ({
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-0 py-2.5 px-3 text-sm "
+              className="absolute right-0 py-2.5 px-3 text-sm"
             >
-              {showPassword ? 'Hide' : 'Show'}
+              {showPassword ? (
+                <Eye className="w-4 h-4 mt-1 ml-1" />
+              ) : (
+                <EyeOff className="w-4 h-4 mt-1 ml-1" />
+              )}
             </button>
           )}
         </div>

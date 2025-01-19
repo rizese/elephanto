@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ElephantoScreen } from '../components/ElephantoScreen';
 import { DatabaseConnection } from '@renderer/types/settings';
 import SlidePanel from '@renderer/components/SlidePanel';
@@ -6,10 +6,7 @@ import { ConnectionForm } from '@renderer/components/ConnectionForm';
 import { SavedConnections } from '@renderer/components/SavedConnections';
 import { Plus, X } from 'lucide-react';
 import { getConnectionString } from '@renderer/App';
-
-export interface ConnectionFormProps {
-  onSuccessfulConnection: (connection: DatabaseConnection) => void;
-}
+import { useSafeStorage } from '@renderer/hooks/useSafeStorage';
 
 export type ConnectionResult = {
   success: boolean;
@@ -19,57 +16,71 @@ export type ConnectionResult = {
 };
 
 const previousConnections: DatabaseConnection[] = [
-  {
-    name: 'Local Postgres',
-    username: 'postgres',
-    password: 'magicstory',
-    host: 'localhost',
-    port: '5432',
-    database: 'postgres',
-  },
-  {
-    name: 'Local Spara',
-    username: 'spara',
-    password: 'spara_dev',
-    host: 'localhost',
-    port: '5432',
-    database: 'spara_local',
-  },
-  {
-    name: 'Vercel DB',
-    username: 'default',
-    password: 'DsmgvPQTdR45',
-    host: 'ep-divine-waterfall-24910907-pooler.us-east-1.postgres.vercel-storage.com',
-    port: '5432',
-    database: 'verceldb',
-  },
+  // {
+  //   name: 'Local Postgres',
+  //   username: 'postgres',
+  //   password: 'magicstory',
+  //   host: 'localhost',
+  //   port: '5432',
+  //   database: 'postgres',
+  // },
+  // {
+  //   name: 'Local Spara',
+  //   username: 'spara',
+  //   password: 'spara_dev',
+  //   host: 'localhost',
+  //   port: '5432',
+  //   database: 'spara_local',
+  // },
+  // {
+  //   name: 'Vercel DB',
+  //   username: 'default',
+  //   password: 'DsmgvPQTdR45',
+  //   host: 'ep-divine-waterfall-24910907-pooler.us-east-1.postgres.vercel-storage.com',
+  //   port: '5432',
+  //   database: 'verceldb',
+  // },
 ];
 
 export const MakeConnectionPage = ({
   onSuccessfulConnection,
-}: ConnectionFormProps): JSX.Element => {
-  const [isOpen, setIsOpen] = useState(false);
+}: {
+  onSuccessfulConnection: (connection: DatabaseConnection) => void;
+}): JSX.Element => {
+  const [isConnectionFormOpen, setIsConnectionFormOpen] = useState(false);
   const [playVideo, setPlayVideo] = useState(false);
   const [selectedConnection, setSelectedConnection] = useState<
     DatabaseConnection | undefined
   >();
-  const [connections, setConnections] =
-    useState<DatabaseConnection[]>(previousConnections);
+  const { decryptAndRetrieve } = useSafeStorage();
+  const [connections, setConnections] = useState<DatabaseConnection[]>();
   const [error, setError] = useState<string>();
 
   const handleEdit = (connection: DatabaseConnection) => {
     setSelectedConnection(connection);
-    setIsOpen(true);
+    setIsConnectionFormOpen(true);
   };
 
   const handleDelete = (connection: DatabaseConnection) => {
-    setConnections(connections.filter((c) => c !== connection));
+    // TODO: Implement
+    console.log('handleDelete', connection);
   };
 
   const handleNewConnection = () => {
     setSelectedConnection(undefined);
-    setIsOpen(true);
+    setIsConnectionFormOpen(true);
   };
+
+  useEffect(() => {
+    const getConnections = async () => {
+      const connections =
+        await decryptAndRetrieve<DatabaseConnection[]>('connections');
+      if (connections?.data) {
+        setConnections(connections.data);
+      }
+    };
+    getConnections();
+  }, []);
 
   return (
     <div className="w-full flex">
@@ -82,7 +93,6 @@ export const MakeConnectionPage = ({
       <div className="w-1/2 relative">
         <div className="p-5">
           <SavedConnections
-            connections={connections}
             onEdit={handleEdit}
             onDelete={handleDelete}
             error={error}
@@ -119,28 +129,33 @@ export const MakeConnectionPage = ({
           </button>
         </div>
 
-        <SlidePanel isOpen={isOpen} direction="right" className="w-1/2">
+        <SlidePanel
+          isOpen={isConnectionFormOpen}
+          direction="right"
+          className="w-1/2"
+        >
           <div className="flex justify-end pb-0">
-            <button className="p-5 pb-0" onClick={() => setIsOpen(false)}>
+            <button
+              className="p-5 pb-0"
+              onClick={() => setIsConnectionFormOpen(false)}
+            >
               <X className="inline-block" />
             </button>
           </div>
           <ConnectionForm
             connection={selectedConnection}
-            onSuccessfulConnection={(connection) => {
-              if (selectedConnection) {
-                // Update existing connection
-                setConnections(
-                  connections.map((c) =>
-                    c === selectedConnection ? connection : c,
-                  ),
-                );
-              } else {
-                // Add new connection
-                setConnections([...connections, connection]);
-              }
-              onSuccessfulConnection(connection);
-            }}
+            // onSuccessfulConnection={(connection) => {
+            //   debugger;
+            //   if (selectedConnection) {
+            //     // Update existing connection
+            //     setConnections(
+            //       connection.map((c) =>
+            //         c === selectedConnection ? connection : c,
+            //       ),
+            //     );
+            //   }
+            //   onSuccessfulConnection(connection);
+            // }}
           />
         </SlidePanel>
       </div>

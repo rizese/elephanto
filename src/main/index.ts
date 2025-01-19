@@ -1,9 +1,10 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron';
-import { join } from 'path';
+import { app, shell, BrowserWindow, ipcMain, safeStorage } from 'electron';
+import path, { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import icon from '../../resources/icon.png?asset';
 import { Client, QueryResult } from 'pg';
 import { DatabaseError } from 'pg-protocol';
+import fs from 'fs';
 
 // Global window reference
 let mainWindow: BrowserWindow | null = null;
@@ -408,6 +409,41 @@ ipcMain.handle('db:execute-query', async (_event, query: string) => {
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+});
+
+ipcMain.handle('encrypt-and-store', async (_event, jsonData: object) => {
+  try {
+    const jsonString = JSON.stringify(jsonData);
+    const encryptedBuffer = safeStorage.encryptString(jsonString);
+    const filePath = path.join(app.getPath('userData'), 'encryptedData');
+    fs.writeFileSync(filePath, encryptedBuffer);
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to encrypt and store data:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+});
+
+ipcMain.handle('decrypt-and-retrieve', async () => {
+  try {
+    const filePath = path.join(app.getPath('userData'), 'encryptedData');
+    if (!fs.existsSync(filePath)) {
+      throw new Error('No data file found.');
+    }
+    const encryptedBuffer = fs.readFileSync(filePath);
+    const decryptedString = safeStorage.decryptString(encryptedBuffer);
+    const jsonData = JSON.parse(decryptedString);
+    return { success: true, data: jsonData };
+  } catch (error) {
+    console.error('Failed to decrypt and retrieve data:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
     };
   }
 });

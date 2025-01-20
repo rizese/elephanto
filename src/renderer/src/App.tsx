@@ -1,7 +1,7 @@
 // import { useState } from 'react';
 import { MakeConnectionPage } from './page/MakeConnection';
 import { SchemaVisualizerPage } from './page/SchemaVisualizerPage';
-import { DatabaseConnection } from './hooks/useSafeStorage';
+import { DatabaseConnection } from 'src/types/electronAPI';
 import { useAppContext } from './components/AppContextProvider';
 import { useEffect, useState } from 'react';
 

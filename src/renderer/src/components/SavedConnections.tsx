@@ -1,4 +1,4 @@
-import { DatabaseConnection } from '@renderer/hooks/useSafeStorage';
+import { DatabaseConnection } from 'src/types/electronAPI';
 import { Edit2, Trash2, CircleAlert } from 'lucide-react';
 import { useState } from 'react';
 import { DeleteConfirmation } from './DeleteConfirmation';

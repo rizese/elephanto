@@ -1,4 +1,4 @@
-export interface Database {
+export interface DatabaseAPI {
   connect: (connectionString: string) => Promise<{
     success: boolean;
     version?: string;
@@ -85,16 +85,34 @@ export interface Database {
   ) => () => void;
 }
 
-export interface SafeStorage {
-  // TODO: add methods
+interface SafeStorageResponse<T = unknown> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}
+
+export interface SafeStorageAPI {
+  getConnections: () => Promise<
+    SafeStorageResponse<Record<string, DatabaseConnection>>
+  >;
+  storeConnections: (
+    connections: Record<string, DatabaseConnection>,
+  ) => Promise<SafeStorageResponse<void>>;
 }
 
 declare global {
   interface Window {
-    // adding window.electronAPI to the global window object
     electronAPI: {
-      database: Database;
-      safeStorage: SafeStorage;
+      database: DatabaseAPI;
+      safeStorage: SafeStorageAPI;
     };
   }
+}
+export interface DatabaseConnection {
+  name?: string;
+  host: string;
+  port: string;
+  username: string;
+  password: string;
+  database: string;
 }

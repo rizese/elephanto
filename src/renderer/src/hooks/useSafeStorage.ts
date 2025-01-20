@@ -1,14 +1,6 @@
 // src/renderer/src/hooks/useSafeStorage.ts
 import { useCallback } from 'react';
-
-export interface DatabaseConnection {
-  name?: string;
-  host: string;
-  port: string;
-  username: string;
-  password: string;
-  database: string;
-}
+import { DatabaseConnection } from 'src/types/electronAPI';
 
 interface SafeStorageResponse<T = unknown> {
   success: boolean;
@@ -20,8 +12,8 @@ export function useSafeStorage() {
   const setConnections = useCallback(
     async (
       updater: (
-        prev: Record<string, PostgresConnection>,
-      ) => Record<string, PostgresConnection> | null,
+        prev: Record<string, DatabaseConnection>,
+      ) => Record<string, DatabaseConnection> | null,
     ): Promise<boolean> => {
       try {
         // Get existing connections
@@ -55,7 +47,7 @@ export function useSafeStorage() {
   );
 
   const getConnections = useCallback(async (): Promise<
-    SafeStorageResponse<Record<string, PostgresConnection>>
+    SafeStorageResponse<Record<string, DatabaseConnection>>
   > => {
     try {
       const response = await window.electronAPI.safeStorage.getConnections();
@@ -76,6 +68,7 @@ export function useSafeStorage() {
 
   return { setConnections, getConnections };
 }
+// src/types/settings.d.ts
 
 // Example usage:
 /*

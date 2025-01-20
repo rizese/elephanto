@@ -1,29 +1,31 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react';
 
 type FadeOutProps = {
-  children: React.ReactNode
-  time: number
-}
+  children: React.ReactNode;
+  time: number;
+  onComplete?: () => void;
+};
 
-const FadeOut = ({ children, time }: FadeOutProps) => {
-  const [isVisible, setIsVisible] = useState(true)
-  const [shouldRender, setShouldRender] = useState(true)
+const FadeOut = ({ children, time, onComplete }: FadeOutProps) => {
+  const [isVisible, setIsVisible] = useState(true);
+  const [shouldRender, setShouldRender] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setIsVisible(false)
-    }, time)
+      setIsVisible(false);
+    }, time);
 
-    return () => clearTimeout(timer)
-  }, [time])
+    return () => clearTimeout(timer);
+  }, [time]);
 
   const handleTransitionEnd = () => {
     if (!isVisible) {
-      setShouldRender(false)
+      setShouldRender(false);
+      onComplete?.();
     }
-  }
+  };
 
-  if (!shouldRender) return null
+  if (!shouldRender) return null;
 
   return (
     <div
@@ -31,13 +33,13 @@ const FadeOut = ({ children, time }: FadeOutProps) => {
       style={{
         opacity: isVisible ? 1 : 0,
         maxHeight: isVisible ? '1000px' : '0',
-        overflow: 'hidden'
+        overflow: 'hidden',
       }}
       onTransitionEnd={handleTransitionEnd}
     >
       {children}
     </div>
-  )
-}
+  );
+};
 
-export default FadeOut
+export default FadeOut;

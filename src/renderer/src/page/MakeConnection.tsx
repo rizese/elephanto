@@ -4,8 +4,9 @@ import { DatabaseConnection } from 'src/types/electronAPI';
 import SlidePanel from '@renderer/components/SlidePanel';
 import { ConnectionForm } from '@renderer/components/ConnectionForm';
 import { SavedConnections } from '@renderer/components/SavedConnections';
-import { Plus, X } from 'lucide-react';
+import { CircleAlert, Plus, X } from 'lucide-react';
 import { getConnectionString } from '@renderer/App';
+import FadeOut from '@renderer/components/FadeOut';
 
 export interface ConnectionFormProps {
   onSuccessfulConnection: (connection: DatabaseConnection) => void;
@@ -45,11 +46,24 @@ const previousConnections: DatabaseConnection[] = [
   },
 ];
 
+const NewConnectionButton = ({ onClick }: { onClick: () => void }) => {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex grow items-center justify-center w-full gap-2 text-white px-4 py-2 rounded disabled:opacity-50 bg-gradient-to-r from-violet-600 to-fuchsia-500 hover:from-violet-700 hover:to-fuchsia-600"
+    >
+      <Plus className="inline-block w-4 h-4" />
+      New Connection
+    </button>
+  );
+};
+
 export const MakeConnectionPage = ({
   onSuccessfulConnection,
 }: ConnectionFormProps): JSX.Element => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [playVideo, setPlayVideo] = useState(false);
+  const [isConnectionSlidePanelOpen, setConnectionSlidePanelOpen] =
+    useState(false);
   const [selectedConnection, setSelectedConnection] = useState<
     DatabaseConnection | undefined
   >();
@@ -59,34 +73,32 @@ export const MakeConnectionPage = ({
 
   const handleEdit = (connection: DatabaseConnection) => {
     setSelectedConnection(connection);
-    setIsOpen(true);
-  };
-
-  const handleDelete = (connection: DatabaseConnection) => {
-    setConnections(connections.filter((c) => c !== connection));
+    setConnectionSlidePanelOpen(true);
   };
 
   const handleNewConnection = () => {
     setSelectedConnection(undefined);
-    setIsOpen(true);
+    setConnectionSlidePanelOpen(true);
   };
 
   return (
     <div className="w-full flex">
-      <div
-        className="w-1/2 h-lvh overflow-hidden"
-        onClick={() => setPlayVideo((prev) => !prev)}
-      >
-        <ElephantoScreen playVideo={playVideo} />
+      <div className="w-1/2 h-lvh overflow-hidden">
+        <ElephantoScreen />
       </div>
       <div className="w-1/2 relative">
         <div className="p-5">
+          {error && (
+            <FadeOut time={2000} onComplete={() => setError(undefined)}>
+              <div className="text-red-800 italic pb-3 uppercase flex items-center">
+                <CircleAlert className="w-4 h-4 mr-1 inline-block" />
+                {error}
+              </div>
+            </FadeOut>
+          )}
           <SavedConnections
             connections={connections}
             onEdit={handleEdit}
-            onDelete={handleDelete}
-            error={error}
-            clearError={() => setError(undefined)}
             onSelect={async (connection) => {
               try {
                 const connectionString = getConnectionString(connection);
@@ -109,19 +121,18 @@ export const MakeConnectionPage = ({
           />
         </div>
         <div className="absolute bottom-0 left-0 w-full p-5 bg-neutral-900">
-          <button
-            type="button"
-            onClick={handleNewConnection}
-            className="flex grow items-center justify-center w-full gap-2 text-white px-4 py-2 rounded disabled:opacity-50 bg-gradient-to-r from-violet-600 to-fuchsia-500 hover:from-violet-700 hover:to-fuchsia-600"
-          >
-            <Plus className="inline-block w-4 h-4" />
-            New Connection
-          </button>
+          <NewConnectionButton onClick={handleNewConnection} />
         </div>
-
-        <SlidePanel isOpen={isOpen} direction="right" className="w-1/2">
+        <SlidePanel
+          isOpen={isConnectionSlidePanelOpen}
+          direction="right"
+          className="w-1/2"
+        >
           <div className="flex justify-end pb-0">
-            <button className="p-5 pb-0" onClick={() => setIsOpen(false)}>
+            <button
+              className="p-5 pb-0"
+              onClick={() => setConnectionSlidePanelOpen(false)}
+            >
               <X className="inline-block" />
             </button>
           </div>

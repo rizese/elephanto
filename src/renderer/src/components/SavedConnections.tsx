@@ -1,13 +1,11 @@
 import { DatabaseConnection } from 'src/types/electronAPI';
-import { Edit2, Trash2, CircleAlert } from 'lucide-react';
+import { Edit2, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { DeleteConfirmation } from './DeleteConfirmation';
-import FadeOut from './FadeOut';
 
 interface SavedConnectionsProps {
   connections: DatabaseConnection[];
   onEdit: (connection: DatabaseConnection) => void;
-  onDelete: (connection: DatabaseConnection) => void;
   onSelect: (connection: DatabaseConnection) => void;
   error?: string;
   clearError?: () => void;
@@ -16,10 +14,7 @@ interface SavedConnectionsProps {
 export const SavedConnections = ({
   connections,
   onEdit,
-  onDelete,
   onSelect,
-  error,
-  clearError,
 }: SavedConnectionsProps): JSX.Element => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [deleteConnection, setDeleteConnection] =
@@ -35,14 +30,6 @@ export const SavedConnections = ({
 
   return (
     <div className="flex flex-col gap-2">
-      {error && (
-        <FadeOut time={2000} onComplete={clearError}>
-          <div className="text-red-800 italic pb-3 uppercase flex items-center">
-            <CircleAlert className="w-4 h-4 mr-1 inline-block" />
-            {error}
-          </div>
-        </FadeOut>
-      )}
       {connections.map((connection, index) => (
         <div
           key={index}
@@ -105,7 +92,7 @@ export const SavedConnections = ({
         onClose={() => setDeleteConnection(null)}
         onConfirm={() => {
           if (deleteConnection) {
-            onDelete(deleteConnection);
+            // TODO: Implement delete connection
             setDeleteConnection(null);
           }
         }}

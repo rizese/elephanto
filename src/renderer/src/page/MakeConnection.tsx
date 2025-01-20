@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ElephantoScreen } from '../components/ElephantoScreen';
 import { DatabaseConnection } from 'src/types/electronAPI';
 import SlidePanel from '@renderer/components/SlidePanel';
@@ -7,10 +7,7 @@ import { SavedConnections } from '@renderer/components/SavedConnections';
 import { CircleAlert, Plus, X } from 'lucide-react';
 import { getConnectionString } from '@renderer/App';
 import FadeOut from '@renderer/components/FadeOut';
-
-export interface ConnectionFormProps {
-  onSuccessfulConnection: (connection: DatabaseConnection) => void;
-}
+import { useSafeStorage } from '@renderer/hooks/useSafeStorage';
 
 export type ConnectionResult = {
   success: boolean;
@@ -61,7 +58,9 @@ const NewConnectionButton = ({ onClick }: { onClick: () => void }) => {
 
 export const MakeConnectionPage = ({
   onSuccessfulConnection,
-}: ConnectionFormProps): JSX.Element => {
+}: {
+  onSuccessfulConnection: (connection: DatabaseConnection) => void;
+}): JSX.Element => {
   const [isConnectionSlidePanelOpen, setConnectionSlidePanelOpen] =
     useState(false);
   const [selectedConnection, setSelectedConnection] = useState<
@@ -70,6 +69,9 @@ export const MakeConnectionPage = ({
   const [connections, setConnections] =
     useState<DatabaseConnection[]>(previousConnections);
   const [error, setError] = useState<string>();
+
+  const { getConnections } = useSafeStorage();
+  const [loadedConnections, setLoadedConnections] = useState<any>([]);
 
   const handleEdit = (connection: DatabaseConnection) => {
     setSelectedConnection(connection);
@@ -80,6 +82,16 @@ export const MakeConnectionPage = ({
     setSelectedConnection(undefined);
     setConnectionSlidePanelOpen(true);
   };
+
+  useEffect(() => {
+    const loadConnections = async () => {
+      const result = await getConnections();
+      if (result.success) {
+        setLoadedConnections(result.data);
+      }
+    };
+    loadConnections();
+  }, []);
 
   return (
     <div className="w-full flex">
@@ -95,6 +107,9 @@ export const MakeConnectionPage = ({
                 {error}
               </div>
             </FadeOut>
+          )}
+          {loadedConnections && (
+            <pre>{JSON.stringify(loadedConnections, null, 2)}</pre>
           )}
           <SavedConnections
             connections={connections}

@@ -6,14 +6,26 @@ import { DatabaseConnection } from 'src/types/electronAPI';
 import { CircleAlert, Check } from 'lucide-react';
 import { useState } from 'react';
 import FadeOut from './FadeOut';
-import {
-  ConnectionFormProps,
-  ConnectionResult,
-} from '@renderer/page/MakeConnection';
+import { ConnectionResult } from '@renderer/page/MakeConnection';
+import { useSafeStorage } from '@renderer/hooks/useSafeStorage';
+
+export const makeName = (connection: DatabaseConnection): string => {
+  function capitalize(s: string): string {
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  if (connection.host === 'localhost') {
+    return `Local ${capitalize(connection.database)}`;
+  }
+
+  return `${capitalize(connection.host)} ${capitalize(connection.database)}`;
+};
 
 export const ConnectionForm = ({
   onSuccessfulConnection,
-}: ConnectionFormProps): JSX.Element => {
+}: {
+  onSuccessfulConnection: (connection: DatabaseConnection) => void;
+}): JSX.Element => {
   const [formData, setFormData] = useState<DatabaseConnection>({
     host: 'localhost',
     port: '5432',
@@ -22,11 +34,25 @@ export const ConnectionForm = ({
     password: '',
     name: '',
   });
+  const { setConnections } = useSafeStorage();
   const [isConnecting, setIsConnecting] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [error, setError] = useState('');
   const [testMessage, setTestMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  const saveConnection = async (
+    name: string,
+    connection: DatabaseConnection,
+  ) => {
+    const success = await setConnections((prev) => ({
+      ...prev,
+      [name]: connection,
+    }));
+    if (success) {
+      // Handle success
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
@@ -52,6 +78,7 @@ export const ConnectionForm = ({
 
       if (result.success) {
         console.log('Connected to PostgreSQL version:', result.version);
+        saveConnection(makeName(formData), formData);
         onSuccessfulConnection(formData);
       } else {
         setError(

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { SchemaVisualizer } from './Visualizer'; // Renamed from SchemaViewer
-import { DatabaseConnection } from '@renderer/types/settings';
+import { DatabaseConnection } from '@renderer/hooks/useSafeStorage';
 import { getConnectionStringForDisplay } from '@renderer/App';
 import { quantum } from 'ldrs';
 import { ChatSlidePanel } from '@renderer/components/ChatSlidePanel';

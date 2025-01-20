@@ -1,5 +1,4 @@
-// src/types/database.ts
-export interface DatabaseAPI {
+export interface Database {
   connect: (connectionString: string) => Promise<{
     success: boolean;
     version?: string;
@@ -86,11 +85,16 @@ export interface DatabaseAPI {
   ) => () => void;
 }
 
+export interface SafeStorage {
+  // TODO: add methods
+}
+
 declare global {
   interface Window {
     // adding window.electronAPI to the global window object
     electronAPI: {
-      database: DatabaseAPI;
+      database: Database;
+      safeStorage: SafeStorage;
     };
   }
 }

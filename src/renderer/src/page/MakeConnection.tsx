@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ElephantoScreen } from '../components/ElephantoScreen';
-import { DatabaseConnection } from '@renderer/types/settings';
+import { DatabaseConnection } from '@renderer/hooks/useSafeStorage';
 import SlidePanel from '@renderer/components/SlidePanel';
 import { ConnectionForm } from '@renderer/components/ConnectionForm';
 import { SavedConnections } from '@renderer/components/SavedConnections';

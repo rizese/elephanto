@@ -1,7 +1,7 @@
 // import { useState } from 'react';
 import { MakeConnectionPage } from './page/MakeConnection';
 import { SchemaVisualizerPage } from './page/SchemaVisualizerPage';
-import { DatabaseConnection } from './types/settings';
+import { DatabaseConnection } from './hooks/useSafeStorage';
 import { useAppContext } from './components/AppContextProvider';
 import { useEffect, useState } from 'react';
 

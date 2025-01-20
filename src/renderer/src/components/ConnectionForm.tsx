@@ -2,7 +2,7 @@ import {
   getConnectionString,
   getConnectionStringForDisplay,
 } from '@renderer/App';
-import { DatabaseConnection } from '@renderer/types/settings';
+import { DatabaseConnection } from '@renderer/hooks/useSafeStorage';
 import { CircleAlert, Check } from 'lucide-react';
 import { useState } from 'react';
 import FadeOut from './FadeOut';

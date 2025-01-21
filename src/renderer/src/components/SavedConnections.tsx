@@ -38,8 +38,10 @@ export const SavedConnections = ({
     fetchConnections();
   }, []);
 
+  console.log(connections);
+
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 h-full">
       {connections.map((connection, index) => (
         <div
           key={index}
@@ -92,6 +94,15 @@ export const SavedConnections = ({
           )}
         </div>
       ))}
+      {connections.length === 0 && (
+        <div className="flex flex-col items-center justify-center h-full text-center">
+          <h1 className="text-2xl font-bold">Connect to Postgres</h1>
+          <div className="text-center text-gray-400">
+            No connections created yet
+          </div>
+          {/* animated arrow down */}
+        </div>
+      )}
 
       <DeleteConfirmation
         isOpen={!!deleteConnection}

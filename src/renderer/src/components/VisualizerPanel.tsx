@@ -17,6 +17,7 @@ import {
   MessageSquareCode,
 } from 'lucide-react';
 import { useAppContext } from './AppContextProvider';
+import { panelBackground } from '@renderer/constants';
 
 interface NodeData {
   label?: string;
@@ -61,11 +62,6 @@ export const VisualizerPanel: React.FC<VisualizerPanelProps> = ({
   const iconClass = 'w-7 h-7 p-1 mt-0.5';
   const icons = [
     {
-      icon: <MessageSquareCode className={iconClass} />,
-      label: 'Open SQL',
-      onClick: () => setState((prev) => ({ ...prev, showChat: true })),
-    },
-    {
       icon: <ZoomIn className={iconClass} />,
       label: 'Zoom in',
       onClick: () => handleZoom(0.2),
@@ -90,7 +86,7 @@ export const VisualizerPanel: React.FC<VisualizerPanelProps> = ({
   return (
     <Panel
       position="top-center"
-      className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg  mx-0 py-2 px-3"
+      className={`${panelBackground} mx-0 py-2 px-3`}
     >
       <div className="flex flex-row gap-1 items-center justify-center align-center">
         {icons.map(({ icon, label, onClick }) => (

@@ -61,7 +61,7 @@ export function ChatSlidePanel() {
           <div className="flex flew-row gap-2">
             <AutoSizeTextArea
               className="w-full flex-1 focus:outline-none focus:shadow-none focus:ring-violet-500 rounded-lg bg-transparent"
-              placeholder={`Ask me anything about ${connection.name}`}
+              placeholder={`Ask me anything about ${connection.database}`}
             />
             <button
               className={`text-white rounded-lg px-4 ${elephantoGradient}`}

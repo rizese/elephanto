@@ -39,7 +39,6 @@ export const MakeConnectionPage = ({
   const [selectedConnection, setSelectedConnection] = useState<
     DatabaseConnection | undefined
   >();
-  const [connections, setConnections] = useState<DatabaseConnection[]>();
   const [error, setError] = useState<string>();
 
   const handleEdit = (connection: DatabaseConnection) => {
@@ -110,17 +109,6 @@ export const MakeConnectionPage = ({
           <ConnectionForm
             connection={selectedConnection}
             onSuccessfulConnection={(connection) => {
-              if (selectedConnection) {
-                // Update existing connection
-                setConnections(
-                  connections.map((c) =>
-                    c === selectedConnection ? connection : c,
-                  ),
-                );
-              } else {
-                // Add new connection
-                setConnections([...connections, connection]);
-              }
               onSuccessfulConnection(connection);
             }}
           />

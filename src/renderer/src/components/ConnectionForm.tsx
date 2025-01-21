@@ -8,18 +8,7 @@ import { useState } from 'react';
 import FadeOut from './FadeOut';
 import { ConnectionResult } from '@renderer/page/MakeConnection';
 import { useSafeStorage } from '@renderer/hooks/useSafeStorage';
-
-export const makeName = (connection: DatabaseConnection): string => {
-  function capitalize(s: string): string {
-    return s.charAt(0).toUpperCase() + s.slice(1);
-  }
-
-  if (connection.host === 'localhost') {
-    return `Local ${capitalize(connection.database)}`;
-  }
-
-  return `${capitalize(connection.host)} ${capitalize(connection.database)}`;
-};
+import { generateID } from '../utils';
 
 export const ConnectionForm = ({
   onSuccessfulConnection,
@@ -78,7 +67,7 @@ export const ConnectionForm = ({
 
       if (result.success) {
         console.log('Connected to PostgreSQL version:', result.version);
-        saveConnection(makeName(formData), formData);
+        saveConnection(generateID(), formData);
         onSuccessfulConnection(formData);
       } else {
         setError(

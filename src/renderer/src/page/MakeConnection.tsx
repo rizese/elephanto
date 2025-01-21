@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ElephantoScreen } from '../components/ElephantoScreen';
 import { DatabaseConnection } from 'src/types/electronAPI';
 import SlidePanel from '@renderer/components/SlidePanel';
@@ -7,7 +7,7 @@ import { SavedConnections } from '@renderer/components/SavedConnections';
 import { CircleAlert, Plus, X } from 'lucide-react';
 import { getConnectionString } from '@renderer/App';
 import FadeOut from '@renderer/components/FadeOut';
-import { useSafeStorage } from '@renderer/hooks/useSafeStorage';
+// import { ConnectionsDump } from './ConnectionsDump';
 
 export type ConnectionResult = {
   success: boolean;
@@ -15,33 +15,6 @@ export type ConnectionResult = {
   error?: string;
   serverVersion?: string;
 };
-
-const previousConnections: DatabaseConnection[] = [
-  {
-    name: 'Local Postgres',
-    username: 'postgres',
-    password: 'magicstory',
-    host: 'localhost',
-    port: '5432',
-    database: 'postgres',
-  },
-  {
-    name: 'Local Spara',
-    username: 'spara',
-    password: 'spara_dev',
-    host: 'localhost',
-    port: '5432',
-    database: 'spara_local',
-  },
-  {
-    name: 'Vercel DB',
-    username: 'default',
-    password: 'DsmgvPQTdR45',
-    host: 'ep-divine-waterfall-24910907-pooler.us-east-1.postgres.vercel-storage.com',
-    port: '5432',
-    database: 'verceldb',
-  },
-];
 
 const NewConnectionButton = ({ onClick }: { onClick: () => void }) => {
   return (
@@ -66,12 +39,8 @@ export const MakeConnectionPage = ({
   const [selectedConnection, setSelectedConnection] = useState<
     DatabaseConnection | undefined
   >();
-  const [connections, setConnections] =
-    useState<DatabaseConnection[]>(previousConnections);
+  const [connections, setConnections] = useState<DatabaseConnection[]>();
   const [error, setError] = useState<string>();
-
-  const { getConnections } = useSafeStorage();
-  const [loadedConnections, setLoadedConnections] = useState<any>([]);
 
   const handleEdit = (connection: DatabaseConnection) => {
     setSelectedConnection(connection);
@@ -83,23 +52,13 @@ export const MakeConnectionPage = ({
     setConnectionSlidePanelOpen(true);
   };
 
-  useEffect(() => {
-    const loadConnections = async () => {
-      const result = await getConnections();
-      if (result.success) {
-        setLoadedConnections(result.data);
-      }
-    };
-    loadConnections();
-  }, []);
-
   return (
     <div className="w-full flex">
       <div className="w-1/2 h-lvh overflow-hidden">
         <ElephantoScreen />
       </div>
-      <div className="w-1/2 relative">
-        <div className="p-5">
+      <div className="w-1/2 h-lvh overflow-hidden relative">
+        <div className="p-5 h-full overflow-y-auto overflow-x-hidden pb-24">
           {error && (
             <FadeOut time={2000} onComplete={() => setError(undefined)}>
               <div className="text-red-800 italic pb-3 uppercase flex items-center">
@@ -108,11 +67,8 @@ export const MakeConnectionPage = ({
               </div>
             </FadeOut>
           )}
-          {loadedConnections && (
-            <pre>{JSON.stringify(loadedConnections, null, 2)}</pre>
-          )}
+          {/* <ConnectionsDump /> */}
           <SavedConnections
-            connections={connections}
             onEdit={handleEdit}
             onSelect={async (connection) => {
               try {

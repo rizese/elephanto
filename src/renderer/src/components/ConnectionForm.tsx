@@ -3,7 +3,7 @@ import {
   getConnectionStringForDisplay,
 } from '@renderer/App';
 import { DatabaseConnection } from 'src/types/electronAPI';
-import { CircleAlert, Check } from 'lucide-react';
+import { CircleAlert, Check, Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 import FadeOut from './FadeOut';
 import { ConnectionResult } from '@renderer/page/MakeConnection';
@@ -67,7 +67,7 @@ export const ConnectionForm = ({
 
       if (result.success) {
         console.log('Connected to PostgreSQL version:', result.version);
-        saveConnection(generateID(), formData);
+        saveConnection(generateID(formData), formData);
         onSuccessfulConnection(formData);
       } else {
         setError(
@@ -140,7 +140,11 @@ export const ConnectionForm = ({
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-0 py-2.5 px-3 text-sm "
             >
-              {showPassword ? 'Hide' : 'Show'}
+              {showPassword ? (
+                <EyeOff className="w-5 h-5" />
+              ) : (
+                <Eye className="w-5 h-5" />
+              )}
             </button>
           )}
         </div>

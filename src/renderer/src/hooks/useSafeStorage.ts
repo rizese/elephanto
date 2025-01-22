@@ -66,35 +66,16 @@ export function useSafeStorage() {
     }
   }, []);
 
-  return { setConnections, getConnections };
+  const deleteConnection = useCallback(
+    async (name: string): Promise<boolean> => {
+      const success = await setConnections((prev) => {
+        const { [name]: _, ...rest } = prev;
+        return rest;
+      });
+      return success;
+    },
+    [],
+  );
+
+  return { setConnections, getConnections, deleteConnection };
 }
-// src/types/settings.d.ts
-
-// Example usage:
-/*
-const { setConnections, getConnections } = useSafeStorage();
-
-// Add/update a connection
-await setConnections(prev => ({
-  ...prev,
-  "Local DB": {
-    host: "localhost",
-    port: "5432",
-    database: "postgres",
-    username: "postgres",
-    password: "password"
-  }
-}));
-
-// Get all connections
-const result = await getConnections();
-if (result.success) {
-  const connections = result.data; // Type: Record<string, PostgresConnection>
-}
-
-// Delete a connection
-await setConnections(prev => {
-  const { ["Local DB"]: removed, ...rest } = prev;
-  return rest;
-});
-*/

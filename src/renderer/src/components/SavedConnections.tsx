@@ -1,9 +1,9 @@
 import { DatabaseConnection } from 'src/types/electronAPI';
-import { Edit2, Trash2 } from 'lucide-react';
+import { ArrowDown, Edit2, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { DeleteConfirmation } from './DeleteConfirmation';
 import { useSafeStorage } from '@renderer/hooks/useSafeStorage';
-import { makeName } from '@renderer/utils';
+import { generateID, makeName } from '@renderer/utils';
 
 interface SavedConnectionsProps {
   onEdit: (connection: DatabaseConnection) => void;
@@ -12,15 +12,28 @@ interface SavedConnectionsProps {
   clearError?: () => void;
 }
 
+type SavedConnection = DatabaseConnection & {
+  id: string;
+};
+
+const transformConnection = (
+  data: Record<string, DatabaseConnection>,
+): SavedConnection[] => {
+  return Object.entries(data).map(([key, connection]) => ({
+    ...connection,
+    id: key,
+  }));
+};
+
 export const SavedConnections = ({
   onEdit,
   onSelect,
 }: SavedConnectionsProps): JSX.Element => {
-  const [connections, setConnections] = useState<DatabaseConnection[]>([]);
-  const { getConnections } = useSafeStorage();
+  const [connections, setConnections] = useState<SavedConnection[]>([]);
+  const { getConnections, deleteConnection } = useSafeStorage();
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [deleteConnection, setDeleteConnection] =
-    useState<DatabaseConnection | null>(null);
+  const [connectionToDelete, setConnectionToDelete] =
+    useState<SavedConnection | null>();
 
   const getConnectionDetails = (connection: DatabaseConnection): string => {
     return `${connection.username}@${connection.host}:${connection.port}`;
@@ -30,15 +43,11 @@ export const SavedConnections = ({
     const fetchConnections = async () => {
       const { data } = await getConnections();
       if (data) {
-        // Convert the object into an array of connections
-        const connectionsArray = Object.values(data);
-        setConnections(connectionsArray);
+        setConnections(transformConnection(data));
       }
     };
     fetchConnections();
-  }, []);
-
-  console.log(connections);
+  }, [connectionToDelete]);
 
   return (
     <div className="flex flex-col gap-2 h-full">
@@ -50,7 +59,7 @@ export const SavedConnections = ({
           onMouseLeave={() => setHoveredIndex(null)}
         >
           <button
-            className="group/item flex flex-col w-full text-left truncate p-5 rounded-md border border-zinc-800 hover:bg-zinc-800"
+            className="group/item overflow-x-auto flex flex-col text-nowrap w-full text-left p-5 rounded-md border border-zinc-800 hover:bg-zinc-800"
             onClick={() => onSelect(connection)}
           >
             <div className="text-lg font-medium">{makeName(connection)}</div>
@@ -83,7 +92,7 @@ export const SavedConnections = ({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setDeleteConnection(connection);
+                    setConnectionToDelete(connection);
                   }}
                   className="p-2 rounded-full hover:bg-zinc-700"
                 >
@@ -95,25 +104,26 @@ export const SavedConnections = ({
         </div>
       ))}
       {connections.length === 0 && (
-        <div className="flex flex-col items-center justify-center h-full text-center">
-          <h1 className="text-2xl font-bold">Connect to Postgres</h1>
-          <div className="text-center text-gray-400">
-            No connections created yet
+        <div className="flex flex-col items-center justify-stretch h-full text-center">
+          <div className="flex-1 flex flex-col items-center justify-center">
+            <h1 className="text-2xl font-bold">Connect to Postgres</h1>
+            <div className="text-center text-gray-400">
+              No connections created yet
+            </div>
           </div>
-          {/* animated arrow down */}
+          <ArrowDown className="w-10 h-10 animate-bounce" />
         </div>
       )}
-
       <DeleteConfirmation
-        isOpen={!!deleteConnection}
-        onClose={() => setDeleteConnection(null)}
-        onConfirm={() => {
-          if (deleteConnection) {
-            // TODO: Implement delete connection
-            setDeleteConnection(null);
+        isOpen={!!connectionToDelete}
+        onClose={() => setConnectionToDelete(null)}
+        onConfirm={async () => {
+          if (connectionToDelete) {
+            await deleteConnection(connectionToDelete.id);
+            setConnectionToDelete(null);
           }
         }}
-        connectionName={deleteConnection ? makeName(deleteConnection) : ''}
+        connectionName={connectionToDelete ? makeName(connectionToDelete) : ''}
       />
     </div>
   );

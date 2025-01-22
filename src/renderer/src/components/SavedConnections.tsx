@@ -1,12 +1,12 @@
 import { DatabaseConnection } from 'src/types/electronAPI';
-import { ArrowDown, Edit2, Trash2 } from 'lucide-react';
+import { ArrowDown, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { DeleteConfirmation } from './DeleteConfirmation';
 import { useSafeStorage } from '@renderer/hooks/useSafeStorage';
-import { generateID, makeName } from '@renderer/utils';
+import { makeName } from '@renderer/utils';
 
 interface SavedConnectionsProps {
-  onEdit: (connection: DatabaseConnection) => void;
+  onEdit?: (connection: DatabaseConnection) => void;
   onSelect: (connection: DatabaseConnection) => void;
   error?: string;
   clearError?: () => void;
@@ -26,7 +26,7 @@ const transformConnection = (
 };
 
 export const SavedConnections = ({
-  onEdit,
+  // onEdit,
   onSelect,
 }: SavedConnectionsProps): JSX.Element => {
   const [connections, setConnections] = useState<SavedConnection[]>([]);
@@ -79,8 +79,8 @@ export const SavedConnections = ({
               >
                 Connect
               </button>
-              <div className="rounded-full bg-zinc-850 px-1 flex gap-2">
-                <button
+              <div className="rounded-full bg-zinc-850 px-1.5 py-1 flex gap-2">
+                {/* <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onEdit(connection);
@@ -88,7 +88,7 @@ export const SavedConnections = ({
                   className="p-2 rounded-full hover:bg-zinc-700"
                 >
                   <Edit2 className="w-4 h-4" />
-                </button>
+                </button> */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();

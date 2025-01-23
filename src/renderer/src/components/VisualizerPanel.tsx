@@ -7,15 +7,7 @@ import {
   ComboboxOption,
 } from '@headlessui/react';
 import { useState } from 'react';
-import {
-  ZoomIn,
-  ZoomOut,
-  Shrink,
-  Expand,
-  X,
-  CircleChevronLeft,
-  MessageSquareCode,
-} from 'lucide-react';
+import { ZoomIn, ZoomOut, X, CircleChevronLeft } from 'lucide-react';
 import { useAppContext } from './AppContextProvider';
 import { panelBackground } from '@renderer/constants';
 
@@ -27,6 +19,86 @@ interface NodeData {
 interface VisualizerPanelProps {
   nodes: Node<NodeData>[];
 }
+
+const ZoomFit = (props) => (
+  <svg
+    width={24}
+    height={24}
+    viewBox="0 0 24 24"
+    fill="tr"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <g clipPath="url(#clip0_1_7)">
+      <path
+        d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z"
+        stroke="currentColor"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M21 21L16.65 16.65"
+        stroke="currentColor"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8.17158 8.17157L13.8284 13.8284"
+        stroke="currentColor"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M11 13.8284L13.8284 13.8284L13.8284 11"
+        stroke="currentColor"
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8 8L10.8284 8"
+        stroke="currentColor"
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8 8V10.5"
+        stroke="currentColor"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </g>
+    <defs>
+      <clipPath id="clip0_1_7">
+        <rect width={24} height={24} fill="white" />
+      </clipPath>
+    </defs>
+  </svg>
+);
+
+const ZoomActual = (props) => (
+  <svg
+    width={24}
+    height={24}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <path
+      d="M21 21L16.65 16.65M11 14V8L9.5 9.5M9 14H13M19 11C19 15.4183 15.4183 19 11 19C6.58172 19 3 15.4183 3 11C3 6.58172 6.58172 3 11 3C15.4183 3 19 6.58172 19 11Z"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
 
 export const VisualizerPanel: React.FC<VisualizerPanelProps> = ({
   nodes,
@@ -59,7 +131,7 @@ export const VisualizerPanel: React.FC<VisualizerPanelProps> = ({
     }
   };
 
-  const iconClass = 'w-7 h-7 p-1 mt-0.5';
+  const iconClass = 'w-8 h-8 p-1 mt-0.5';
   const icons = [
     {
       icon: <ZoomIn className={iconClass} />,
@@ -72,12 +144,12 @@ export const VisualizerPanel: React.FC<VisualizerPanelProps> = ({
       onClick: () => handleZoom(-0.2),
     },
     {
-      icon: <Expand className={iconClass} />,
+      icon: <ZoomFit className={iconClass} />,
       label: 'Zoom to fit',
       onClick: () => fitView({ duration: 800 }),
     },
     {
-      icon: <Shrink className={iconClass} />,
+      icon: <ZoomActual className={iconClass} />,
       label: 'Zoom to 100%',
       onClick: () => zoomTo(1, { duration: 800 }),
     },

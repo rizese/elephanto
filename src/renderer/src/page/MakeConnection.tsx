@@ -90,7 +90,7 @@ export const MakeConnectionPage = ({
             }}
           />
         </div>
-        <div className="absolute bottom-0 left-0 w-full p-5 bg-neutral-900">
+        <div className="absolute bottom-0 left-0 w-full p-5 bg-stone-300 dark:bg-neutral-900">
           <NewConnectionButton onClick={handleNewConnection} />
         </div>
         <SlidePanel

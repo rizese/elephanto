@@ -4,10 +4,23 @@ import { useAppContext } from './AppContextProvider';
 import AutoSizeTextArea from './AutoSizeTextArea';
 import SlidePanel from './SlidePanel';
 import MarkdownText from './MarkdownText';
+import { quantum } from 'ldrs';
+
+const Thinking = () => {
+  return (
+    <div className="chat-bubble mt-1">
+      <div className="pt-2">
+        <l-quantum size="18" speed="1.8" color="white"></l-quantum>
+      </div>
+    </div>
+  );
+};
 
 export function ChatSlidePanel() {
   const { appState, setState } = useAppContext();
   const { showChat, connection } = appState;
+
+  quantum.register();
 
   if (!connection) {
     return null;
@@ -49,13 +62,15 @@ export function ChatSlidePanel() {
                   <img alt="Elephanto" src="src/assets/icon.png" />
                 </div>
               </div>
-
-              <div className="chat-bubble mt-1">Welcome back.</div>
+              <div className="chat-bubble mt-1">
+                <MarkdownText text="Welcome back." />
+              </div>
               <div className="chat-bubble mt-1">
                 <MarkdownText
                   text={`We're connected to \`${connection.host}\` and viewing the schema for the \`${connection.database}\` database.`}
                 />
               </div>
+              <Thinking />
             </div>
           </div>
           <div className="flex flew-row gap-2">

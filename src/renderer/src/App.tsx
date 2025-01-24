@@ -31,13 +31,13 @@ export function App(): JSX.Element {
   }, [state.connection, hasConnected]);
 
   return (
-    <>
+    <div className="bg-stone-200 dark:bg-zinc-850 w-full h-full">
       {state.connection ? (
         <SchemaVisualizerPage connection={state.connection} />
       ) : (
         <MakeConnectionPage onSuccessfulConnection={handleConnect} />
       )}
-    </>
+    </div>
   );
 }
 

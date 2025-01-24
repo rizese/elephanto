@@ -59,11 +59,13 @@ export const SavedConnections = ({
           onMouseLeave={() => setHoveredIndex(null)}
         >
           <button
-            className="group/item overflow-x-auto flex flex-col text-nowrap w-full text-left p-5 rounded-md border border-zinc-800 hover:bg-zinc-800"
+            className="group/item overflow-x-auto flex flex-col text-nowrap w-full text-left p-5 rounded-md border border-stone-500 dark:border-zinc-800 hover:bg-stone-300 hover:dark:bg-zinc-800"
             onClick={() => onSelect(connection)}
           >
-            <div className="text-lg font-medium">{makeName(connection)}</div>
-            <div className="text-sm text-gray-400">
+            <div className="text-lg font-medium dark:text-white text-stone-900">
+              {makeName(connection)}
+            </div>
+            <div className="text-sm dark:text-gray-400 text-stone-500">
               {getConnectionDetails(connection)}
             </div>
           </button>
@@ -107,7 +109,7 @@ export const SavedConnections = ({
         <div className="flex flex-col items-center justify-stretch h-full text-center">
           <div className="flex-1 flex flex-col items-center justify-center">
             <h1 className="text-2xl font-bold">Connect to Postgres</h1>
-            <div className="text-center text-gray-400">
+            <div className="text-center dark:text-gray-400 text-stone-500">
               No connections created yet
             </div>
           </div>

@@ -1,7 +1,7 @@
 // import { useState } from 'react';
 import { MakeConnectionPage } from './page/MakeConnection';
 import { SchemaVisualizerPage } from './page/SchemaVisualizerPage';
-import { DatabaseConnection } from './types/settings';
+import { DatabaseConnection } from 'src/types/electronAPI';
 import { useAppContext } from './components/AppContextProvider';
 import { useEffect, useState } from 'react';
 
@@ -31,13 +31,13 @@ export function App(): JSX.Element {
   }, [state.connection, hasConnected]);
 
   return (
-    <>
+    <div className="bg-stone-200 dark:bg-zinc-850 w-full h-full">
       {state.connection ? (
         <SchemaVisualizerPage connection={state.connection} />
       ) : (
         <MakeConnectionPage onSuccessfulConnection={handleConnect} />
       )}
-    </>
+    </div>
   );
 }
 

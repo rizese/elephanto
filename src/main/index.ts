@@ -1,9 +1,11 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron';
+import { app, shell, BrowserWindow, ipcMain, safeStorage } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
+import { readFile, writeFile } from 'fs/promises';
 import icon from '../../resources/icon.png?asset';
 import { Client, QueryResult } from 'pg';
 import { DatabaseError } from 'pg-protocol';
+import { DatabaseConnection } from '../types/electronAPI';
 
 // Global window reference
 let mainWindow: BrowserWindow | null = null;
@@ -35,6 +37,8 @@ let dbState: DatabaseClient = {
   reconnectAttempts: 0,
   maxReconnectAttempts: 3,
 };
+
+const STORAGE_PATH = join(app.getPath('userData'), 'connections.encrypted');
 
 // Query timeout wrapper
 const executeQueryWithTimeout = async <T>(
@@ -121,9 +125,7 @@ function setupConnectionEventHandlers(client: Client) {
   });
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
+// This method will be called when Electron has finished initialization
 app.whenReady().then(() => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron');
@@ -144,7 +146,7 @@ app.whenReady().then(() => {
   });
 });
 
-// Register IPC Handlers
+// Database IPC Handlers
 ipcMain.handle('db:connect', async (_event, connectionString: string) => {
   try {
     if (!mainWindow) {
@@ -411,6 +413,55 @@ ipcMain.handle('db:execute-query', async (_event, query: string) => {
     };
   }
 });
+
+// Storage IPC Handlers
+ipcMain.handle('storage:get-connections', async () => {
+  try {
+    // Check if encrypted file exists
+    let connections: Record<string, DatabaseConnection> = {};
+
+    try {
+      const encryptedData = await readFile(STORAGE_PATH);
+      const decryptedData = safeStorage.decryptString(encryptedData);
+      connections = JSON.parse(decryptedData);
+    } catch (error) {
+      // File doesn't exist or is corrupted, return empty connections
+      if (error.code !== 'ENOENT') {
+        console.error('Error reading connections:', error);
+      }
+      // Return empty connections object for both cases
+      return { success: true, data: {} };
+    }
+
+    return {
+      success: true,
+      data: connections,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+});
+
+ipcMain.handle(
+  'storage:store-connections',
+  async (_event, connections: Record<string, DatabaseConnection>) => {
+    try {
+      const dataString = JSON.stringify(connections);
+      const encryptedData = safeStorage.encryptString(dataString);
+      await writeFile(STORAGE_PATH, encryptedData);
+
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+);
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits

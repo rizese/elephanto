@@ -2,18 +2,19 @@ import {
   getConnectionString,
   getConnectionStringForDisplay,
 } from '@renderer/App';
-import { DatabaseConnection } from '@renderer/types/settings';
-import { CircleAlert, Check } from 'lucide-react';
+import { DatabaseConnection } from 'src/types/electronAPI';
+import { CircleAlert, Check, Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 import FadeOut from './FadeOut';
-import {
-  ConnectionFormProps,
-  ConnectionResult,
-} from '@renderer/page/MakeConnection';
+import { ConnectionResult } from '@renderer/page/MakeConnection';
+import { useSafeStorage } from '@renderer/hooks/useSafeStorage';
+import { generateID } from '../utils';
 
 export const ConnectionForm = ({
   onSuccessfulConnection,
-}: ConnectionFormProps): JSX.Element => {
+}: {
+  onSuccessfulConnection: (connection: DatabaseConnection) => void;
+}): JSX.Element => {
   const [formData, setFormData] = useState<DatabaseConnection>({
     host: 'localhost',
     port: '5432',
@@ -22,11 +23,25 @@ export const ConnectionForm = ({
     password: '',
     name: '',
   });
+  const { setConnections } = useSafeStorage();
   const [isConnecting, setIsConnecting] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [error, setError] = useState('');
   const [testMessage, setTestMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  const saveConnection = async (
+    name: string,
+    connection: DatabaseConnection,
+  ) => {
+    const success = await setConnections((prev) => ({
+      ...prev,
+      [name]: connection,
+    }));
+    if (success) {
+      // Handle success
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
@@ -52,6 +67,7 @@ export const ConnectionForm = ({
 
       if (result.success) {
         console.log('Connected to PostgreSQL version:', result.version);
+        saveConnection(generateID(formData), formData);
         onSuccessfulConnection(formData);
       } else {
         setError(
@@ -124,7 +140,11 @@ export const ConnectionForm = ({
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-0 py-2.5 px-3 text-sm "
             >
-              {showPassword ? 'Hide' : 'Show'}
+              {showPassword ? (
+                <EyeOff className="w-5 h-5" />
+              ) : (
+                <Eye className="w-5 h-5" />
+              )}
             </button>
           )}
         </div>

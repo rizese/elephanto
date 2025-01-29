@@ -1,48 +1,56 @@
-import { DatabaseConnection } from '@renderer/types/settings';
-import { Edit2, Trash2, CircleAlert } from 'lucide-react';
-import { useState } from 'react';
+import { DatabaseConnection } from 'src/types/electronAPI';
+import { ArrowDown, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { DeleteConfirmation } from './DeleteConfirmation';
-import FadeOut from './FadeOut';
+import { useSafeStorage } from '@renderer/hooks/useSafeStorage';
+import { makeName } from '@renderer/utils';
 
 interface SavedConnectionsProps {
-  connections: DatabaseConnection[];
-  onEdit: (connection: DatabaseConnection) => void;
-  onDelete: (connection: DatabaseConnection) => void;
+  onEdit?: (connection: DatabaseConnection) => void;
   onSelect: (connection: DatabaseConnection) => void;
   error?: string;
   clearError?: () => void;
 }
 
-export const SavedConnections = ({
-  connections,
-  onEdit,
-  onDelete,
-  onSelect,
-  error,
-  clearError,
-}: SavedConnectionsProps): JSX.Element => {
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [deleteConnection, setDeleteConnection] =
-    useState<DatabaseConnection | null>(null);
+type SavedConnection = DatabaseConnection & {
+  id: string;
+};
 
-  const getDisplayName = (connection: DatabaseConnection): string => {
-    return connection.name || connection.database;
-  };
+const transformConnection = (
+  data: Record<string, DatabaseConnection>,
+): SavedConnection[] => {
+  return Object.entries(data).map(([key, connection]) => ({
+    ...connection,
+    id: key,
+  }));
+};
+
+export const SavedConnections = ({
+  // onEdit,
+  onSelect,
+}: SavedConnectionsProps): JSX.Element => {
+  const [connections, setConnections] = useState<SavedConnection[]>([]);
+  const { getConnections, deleteConnection } = useSafeStorage();
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [connectionToDelete, setConnectionToDelete] =
+    useState<SavedConnection | null>();
 
   const getConnectionDetails = (connection: DatabaseConnection): string => {
     return `${connection.username}@${connection.host}:${connection.port}`;
   };
 
+  useEffect(() => {
+    const fetchConnections = async () => {
+      const { data } = await getConnections();
+      if (data) {
+        setConnections(transformConnection(data));
+      }
+    };
+    fetchConnections();
+  }, [connectionToDelete]);
+
   return (
-    <div className="flex flex-col gap-2">
-      {error && (
-        <FadeOut time={2000} onComplete={clearError}>
-          <div className="text-red-800 italic pb-3 uppercase flex items-center">
-            <CircleAlert className="w-4 h-4 mr-1 inline-block" />
-            {error}
-          </div>
-        </FadeOut>
-      )}
+    <div className="flex flex-col gap-2 h-full">
       {connections.map((connection, index) => (
         <div
           key={index}
@@ -51,67 +59,73 @@ export const SavedConnections = ({
           onMouseLeave={() => setHoveredIndex(null)}
         >
           <button
-            className="group/item flex flex-col w-full text-left truncate p-5 rounded-md border border-zinc-800 hover:bg-zinc-800"
+            className="group/item overflow-x-auto flex flex-col text-nowrap w-full text-left p-5 rounded-md border border-stone-500 dark:border-zinc-800 hover:bg-stone-300 hover:dark:bg-zinc-800"
             onClick={() => onSelect(connection)}
           >
-            <div className="text-lg font-medium">
-              {getDisplayName(connection)}
+            <div className="text-lg font-medium dark:text-white text-stone-900">
+              {makeName(connection)}
             </div>
-            <div className="text-sm text-gray-400">
+            <div className="text-sm dark:text-gray-400 text-stone-500">
               {getConnectionDetails(connection)}
             </div>
           </button>
 
           {hoveredIndex === index && (
-            <>
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-row gap-2">
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-row gap-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelect(connection);
+                }}
+                className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-1.5 rounded text-sm"
+              >
+                Connect
+              </button>
+              <div className="rounded-full bg-zinc-850 px-1.5 py-1 flex gap-2">
+                {/* <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(connection);
+                  }}
+                  className="p-2 rounded-full hover:bg-zinc-700"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button> */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    onSelect(connection);
+                    setConnectionToDelete(connection);
                   }}
-                  className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-1.5 rounded text-sm"
+                  className="p-2 rounded-full hover:bg-zinc-700"
                 >
-                  Connect
+                  <Trash2 className="w-4 h-4" />
                 </button>
-                <div className=" rounded-full bg-zinc-850 px-1 flex gap-2">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEdit(connection);
-                    }}
-                    className="p-2 rounded-full hover:bg-zinc-700"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDeleteConnection(connection);
-                    }}
-                    className="p-2 rounded-full hover:bg-zinc-700"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
               </div>
-            </>
+            </div>
           )}
         </div>
       ))}
-
+      {connections.length === 0 && (
+        <div className="flex flex-col items-center justify-stretch h-full text-center">
+          <div className="flex-1 flex flex-col items-center justify-center">
+            <h1 className="text-2xl font-bold">Connect to Postgres</h1>
+            <div className="text-center dark:text-gray-400 text-stone-500">
+              No connections created yet
+            </div>
+          </div>
+          <ArrowDown className="w-10 h-10 animate-bounce" />
+        </div>
+      )}
       <DeleteConfirmation
-        isOpen={!!deleteConnection}
-        onClose={() => setDeleteConnection(null)}
-        onConfirm={() => {
-          if (deleteConnection) {
-            onDelete(deleteConnection);
-            setDeleteConnection(null);
+        isOpen={!!connectionToDelete}
+        onClose={() => setConnectionToDelete(null)}
+        onConfirm={async () => {
+          if (connectionToDelete) {
+            await deleteConnection(connectionToDelete.id);
+            setConnectionToDelete(null);
           }
         }}
-        connectionName={
-          deleteConnection ? getDisplayName(deleteConnection) : ''
-        }
+        connectionName={connectionToDelete ? makeName(connectionToDelete) : ''}
       />
     </div>
   );

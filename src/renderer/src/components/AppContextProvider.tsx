@@ -1,4 +1,4 @@
-import { DatabaseConnection } from '@renderer/types/settings';
+import { DatabaseConnection } from 'src/types/electronAPI';
 import { getConnectionString } from '@renderer/App';
 import React, { createContext, useContext, useEffect } from 'react';
 

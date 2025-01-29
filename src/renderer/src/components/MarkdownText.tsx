@@ -48,7 +48,7 @@ export default function MarkdownText({ className, text }: Props) {
               props.node?.position?.end.line ? (
               // single line code blocks
               <code
-                className="text-pink-700 rounded-md bg-neutral-100 bg-opacity-5 hover:bg-opacity-10 px-1 py-px"
+                className="text-pink-600 antialiased rounded-md bg-neutral-100 bg-opacity-5 hover:bg-opacity-10 px-1 py-px"
                 {...props}
               />
             ) : (

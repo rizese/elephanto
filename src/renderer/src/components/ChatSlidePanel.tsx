@@ -1,4 +1,4 @@
-import { elephantoGradient } from '@renderer/constants';
+import { elephantoGradient } from '../constants';
 import { MessageSquareCode, X, CircleArrowUp } from 'lucide-react';
 import { useAppContext } from './AppContextProvider';
 import AutoSizeTextArea from './AutoSizeTextArea';

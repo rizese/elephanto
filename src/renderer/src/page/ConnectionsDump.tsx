@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSafeStorage } from '@renderer/hooks/useSafeStorage';
-// import MarkdownText from '@renderer/components/MarkdownText';
+import { useSafeStorage } from '../hooks/useSafeStorage';
 
 export const ConnectionsDump = () => {
   const { getConnections } = useSafeStorage();
@@ -17,9 +16,4 @@ export const ConnectionsDump = () => {
   }, []);
 
   return <pre>{JSON.stringify(loadedConnections, null, 2)}</pre>;
-  // return (
-  //   <MarkdownText
-  //     text={`\`\`\`json\n${JSON.stringify(loadedConnections, null, 2)}\n\`\`\``}
-  //   />
-  // );
 };

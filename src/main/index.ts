@@ -3,7 +3,7 @@ import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { readFile, writeFile } from 'fs/promises';
 import icon from '../../resources/icon.png?asset';
-import { Client, QueryResult } from 'pg';
+import { Client, QueryResult, QueryResultRow } from 'pg';
 import { DatabaseError } from 'pg-protocol';
 import { DatabaseConnection } from '../types/electronAPI';
 
@@ -41,7 +41,7 @@ let dbState: DatabaseClient = {
 const STORAGE_PATH = join(app.getPath('userData'), 'connections.encrypted');
 
 // Query timeout wrapper
-const executeQueryWithTimeout = async <T>(
+const executeQueryWithTimeout = async <T extends QueryResultRow>(
   query: string,
   params: any[] = [],
   timeout: number = 30000,
@@ -426,7 +426,7 @@ ipcMain.handle('storage:get-connections', async () => {
       connections = JSON.parse(decryptedData);
     } catch (error) {
       // File doesn't exist or is corrupted, return empty connections
-      if (error.code !== 'ENOENT') {
+      if ((error as { code?: string }).code !== 'ENOENT') {
         console.error('Error reading connections:', error);
       }
       // Return empty connections object for both cases

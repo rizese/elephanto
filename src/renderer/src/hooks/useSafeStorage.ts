@@ -1,6 +1,6 @@
 // src/renderer/src/hooks/useSafeStorage.ts
 import { useCallback } from 'react';
-import { DatabaseConnection } from 'src/types/electronAPI';
+import { DatabaseConnection } from '../../../types/electronAPI';
 
 interface SafeStorageResponse<T = unknown> {
   success: boolean;

@@ -1,9 +1,9 @@
-import { DatabaseConnection } from 'src/types/electronAPI';
+import { DatabaseConnection } from '../../../types/electronAPI';
 import { ArrowDown, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { DeleteConfirmation } from './DeleteConfirmation';
-import { useSafeStorage } from '@renderer/hooks/useSafeStorage';
-import { makeName } from '@renderer/utils';
+import { useSafeStorage } from '../hooks/useSafeStorage';
+import { makeName } from '../utils';
 
 interface SavedConnectionsProps {
   onEdit?: (connection: DatabaseConnection) => void;

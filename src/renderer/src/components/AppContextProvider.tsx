@@ -1,5 +1,5 @@
-import { DatabaseConnection } from 'src/types/electronAPI';
-import { getConnectionString } from '@renderer/App';
+import { DatabaseConnection } from '../../../types/electronAPI';
+import { getConnectionString } from '../App';
 import React, { createContext, useContext, useEffect } from 'react';
 
 type AppState = {

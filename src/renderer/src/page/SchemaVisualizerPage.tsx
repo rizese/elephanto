@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { SchemaVisualizer } from './Visualizer'; // Renamed from SchemaViewer
-import { DatabaseConnection } from 'src/types/electronAPI';
-import { getConnectionStringForDisplay } from '@renderer/App';
+import { DatabaseConnection } from '../../../types/electronAPI';
+import { getConnectionStringForDisplay } from '../App';
 import { quantum } from 'ldrs';
-import { ChatSlidePanel } from '@renderer/components/ChatSlidePanel';
+import { ChatSlidePanel } from '../components/ChatSlidePanel';
 
 export interface Column {
   name: string;

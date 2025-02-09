@@ -15,11 +15,7 @@ import {
 import dagre from 'dagre';
 import '@xyflow/react/dist/style.css';
 import { KeyRound, Link } from 'lucide-react';
-import {
-  ExitButton,
-  VisualizerPanel,
-} from '@renderer/components/VisualizerPanel';
-import { StatusButton } from '@renderer/components/StatusButton';
+import { ExitButton, VisualizerPanel } from '../components/VisualizerPanel';
 
 interface Column {
   name: string;

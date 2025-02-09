@@ -1,4 +1,4 @@
-import { DatabaseConnection } from 'src/types/electronAPI';
+import { DatabaseConnection } from '../../../types/electronAPI';
 
 /**
  * Generates a consistent hash string from a DatabaseConnection object.

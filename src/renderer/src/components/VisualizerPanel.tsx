@@ -9,7 +9,7 @@ import {
 import { useState } from 'react';
 import { ZoomIn, ZoomOut, X, CircleChevronLeft } from 'lucide-react';
 import { useAppContext } from './AppContextProvider';
-import { panelBackground } from '@renderer/constants';
+import { panelBackground } from '../constants';
 
 interface NodeData {
   label?: string;
@@ -104,7 +104,6 @@ export const VisualizerPanel: React.FC<VisualizerPanelProps> = ({
   nodes,
 }: VisualizerPanelProps) => {
   const { setCenter, zoomTo, getZoom, fitView } = useReactFlow();
-  const { setState } = useAppContext();
   const [query, setQuery] = useState('');
   const [selectedNode, setSelectedNode] = useState<Node<NodeData> | null>(null);
 

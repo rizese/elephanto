@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { ElephantoScreen } from '../components/ElephantoScreen';
-import { DatabaseConnection } from 'src/types/electronAPI';
-import SlidePanel from '@renderer/components/SlidePanel';
-import { ConnectionForm } from '@renderer/components/ConnectionForm';
-import { SavedConnections } from '@renderer/components/SavedConnections';
+import { DatabaseConnection } from '../../../types/electronAPI';
+import SlidePanel from '../components/SlidePanel';
+import { ConnectionForm } from '../components/ConnectionForm';
+import { SavedConnections } from '../components/SavedConnections';
 import { CircleAlert, Plus, X } from 'lucide-react';
-import { getConnectionString } from '@renderer/App';
-import FadeOut from '@renderer/components/FadeOut';
+import { getConnectionString } from '../App';
+import FadeOut from '../components/FadeOut';
 // import { ConnectionsDump } from './ConnectionsDump';
 
 export type ConnectionResult = {

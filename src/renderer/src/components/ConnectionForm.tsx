@@ -1,20 +1,20 @@
-import {
-  getConnectionString,
-  getConnectionStringForDisplay,
-} from '@renderer/App';
-import { DatabaseConnection } from 'src/types/electronAPI';
+import { getConnectionString, getConnectionStringForDisplay } from '../App';
+import { DatabaseConnection } from '../../../types/electronAPI';
 import { CircleAlert, Check, Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 import FadeOut from './FadeOut';
-import { ConnectionResult } from '@renderer/page/MakeConnection';
-import { useSafeStorage } from '@renderer/hooks/useSafeStorage';
+import { ConnectionResult } from '../page/MakeConnection';
+import { useSafeStorage } from '../hooks/useSafeStorage';
 import { generateID } from '../utils';
+
+interface ConnectionFormProps {
+  connection?: DatabaseConnection;
+  onSuccessfulConnection: (connection: DatabaseConnection) => void;
+}
 
 export const ConnectionForm = ({
   onSuccessfulConnection,
-}: {
-  onSuccessfulConnection: (connection: DatabaseConnection) => void;
-}): JSX.Element => {
+}: ConnectionFormProps): JSX.Element => {
   const [formData, setFormData] = useState<DatabaseConnection>({
     host: 'localhost',
     port: '5432',
